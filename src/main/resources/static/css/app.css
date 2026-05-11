@@ -10,3 +10,8 @@ body{background:var(--bg-main);color:var(--text-main)} .page-shell{padding-top:1
 .project-tabs .nav-link{color:var(--text-main)!important}.empty-state{padding:2rem;text-align:center;background:var(--bg-soft);border-radius:var(--radius-lg)}
 .text-muted-custom{color:var(--text-muted)} .footer{background:var(--bg-soft)} .textarea-lg{min-height:320px}
 @media (max-width: 991px){.workspace-grid{grid-template-columns:1fr}}
+
+.project-head{background:var(--bg-soft);border:1px solid var(--border-soft)}
+.bg-navy{background:var(--navy)!important;color:#fff}
+.project-tabs .nav-link.active{background:var(--pink-soft)!important;border-color:var(--border-soft)!important}
+.project-tabs-panel{background:var(--bg-soft)}

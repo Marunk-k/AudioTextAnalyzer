@@ -20,6 +20,8 @@ public class ExportController {
     public ResponseEntity<FileSystemResource> docx(@PathVariable Long id){ var p=repo.findById(id).orElseThrow(); return file(export.exportToDocx(p),"result.docx"); }
     @GetMapping("/projects/{id}/export/pdf") @ResponseBody
     public ResponseEntity<FileSystemResource> pdf(@PathVariable Long id){ var p=repo.findById(id).orElseThrow(); return file(export.exportToPdf(p),"result.pdf"); }
+    @GetMapping("/projects/{id}/export/srt") @ResponseBody
+    public ResponseEntity<FileSystemResource> srt(@PathVariable Long id){ var p=repo.findById(id).orElseThrow(); return file(export.exportToSrt(p),"result.srt"); }
 
     private ResponseEntity<FileSystemResource> file(java.nio.file.Path p,String name){
         var r=new FileSystemResource(p);

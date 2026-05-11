@@ -30,3 +30,5 @@ mvn spring-boot:run
 ## Новое в текущем шаге
 - Endpoint статуса `GET /projects/{id}/status` + JS polling на странице проекта.
 - Кнопка `Улучшить через AI` с `MockGigaChatService` и сохранением `aiText`.
+
+- Экспорт расширен: DOCX и PDF (PDF в текущем MVP использует базовый ASCII-safe вывод).

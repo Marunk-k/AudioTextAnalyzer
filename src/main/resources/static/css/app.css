@@ -1,0 +1,5 @@
+body { background: #f7f9fc; }
+.hero { padding: 3rem; background: linear-gradient(120deg,#e9f2ff,#ffffff); border-radius: 1rem; }
+.card-soft { border: 0; border-radius: .8rem; box-shadow: 0 4px 18px rgba(0,0,0,.06); }
+.textarea-lg { min-height: 320px; font-size: 1rem; line-height: 1.5; }
+.status-badge { font-size: .9rem; }

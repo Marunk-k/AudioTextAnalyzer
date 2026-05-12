@@ -1,0 +1,4 @@
+package com.example.audiotext.model;
+import java.util.*;
+public class PostProcessingResult { private String processedText; private int removedDuplicatesCount; private int removedFillerWordsCount; private Map<String,String> replacements=new HashMap<>(); private List<String> notes=new ArrayList<>();
+ public String getProcessedText(){return processedText;} public void setProcessedText(String v){processedText=v;} public int getRemovedDuplicatesCount(){return removedDuplicatesCount;} public void setRemovedDuplicatesCount(int v){removedDuplicatesCount=v;} public int getRemovedFillerWordsCount(){return removedFillerWordsCount;} public void setRemovedFillerWordsCount(int v){removedFillerWordsCount=v;} public Map<String,String> getReplacements(){return replacements;} public List<String> getNotes(){return notes;} }

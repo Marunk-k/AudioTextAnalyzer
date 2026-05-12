@@ -25,3 +25,8 @@ mvn spring-boot:run
 
 ## Mock-режим
 Если модель Vosk недоступна, можно демонстрировать поток через `MockTranscriptionService` и файл `src/main/resources/samples/sample_transcription.txt`.
+
+
+## Новое в текущем шаге
+- Endpoint статуса `GET /projects/{id}/status` + JS polling на странице проекта.
+- Кнопка `Улучшить через AI` с `MockGigaChatService` и сохранением `aiText`.

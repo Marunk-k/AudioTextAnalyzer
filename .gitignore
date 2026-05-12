@@ -1,0 +1,11 @@
+target/
+.idea/
+*.iml
+*.log
+.DS_Store
+data/uploads/*
+data/converted/*
+data/exports/*
+!data/uploads/.gitkeep
+!data/converted/.gitkeep
+!data/exports/.gitkeep

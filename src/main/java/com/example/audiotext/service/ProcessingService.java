@@ -13,7 +13,7 @@ public class ProcessingService {
  public void processProject(Long id){ var p=repo.findById(id).orElseThrow(); try{
    Path source=Path.of(p.getOriginalFilePath()); if(!audio.isSupported(source)) throw new IllegalStateException("Неподдерживаемый формат файла");
    p.setStatus(ProjectStatus.CONVERTING); repo.update(p); Path wav=audio.convertToWav(source,id);
-   p.setStatus(ProjectStatus.TRANSCRIBING); repo.update(p); var t=tr.transcribe(wav); p.setRawText(t.getRawText()); p.setDurationSeconds(t.getDurationSeconds());
+   p.setStatus(ProjectStatus.TRANSCRIBING); repo.update(p); var t=tr.transcribe(wav); p.setRawText(t.getRawText()); p.setDurationSeconds(t.getDurationSeconds()); repo.saveSegments(id, t.getSegments());
    p.setStatus(ProjectStatus.POST_PROCESSING); repo.update(p); var pr=pp.process(p.getRawText(), t.getWords()); p.setProcessedText(pr.getProcessedText());
    p.setStatus(ProjectStatus.ANALYZING); repo.update(p); p.setAnalysisResult(an.analyze(p.getProcessedText(),t));
    p.setStatus(ProjectStatus.READY); repo.update(p);

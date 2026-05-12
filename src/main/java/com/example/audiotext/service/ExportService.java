@@ -58,8 +58,24 @@ public class ExportService {
             return out;
         } catch (IOException e){ throw new RuntimeException("Ошибка экспорта PDF", e);} }
 
+
+    public Path exportToSrt(Project p){
+        try{ Path out=storage.getExportPath(p.getId(), ExportFormat.SRT);
+            StringBuilder sb=new StringBuilder();
+            int idx=1;
+            for(var seg: p.getSegments()){
+                sb.append(idx++).append("\n");
+                sb.append(toSrt(seg.getStart())).append(" --> ").append(toSrt(seg.getEnd())).append("\n");
+                sb.append(seg.getText()==null?"":seg.getText()).append("\n\n");
+            }
+            if(sb.length()==0) throw new IllegalStateException("Сегменты недоступны для SRT экспорта");
+            Files.writeString(out,sb.toString(),StandardCharsets.UTF_8);
+            return out;
+        }catch(Exception e){ throw new RuntimeException("Ошибка экспорта SRT",e);} }
+
     private String safe(String v){ return nullToEmpty(v).replace("\\","\\\\").replace("\"","\\\"").replace("\n","\\n"); }
     private String nullToEmpty(String v){ return v==null?"":v; }
     private String trimLen(String v,int n){ String s=nullToEmpty(v); return s.length()>n?s.substring(0,n)+"...":s; }
     private String ascii(String v){ return nullToEmpty(v).replaceAll("[^\\x20-\\x7E]","?"); }
+    private String toSrt(double sec){ int ms=(int)Math.round(sec*1000); int h=ms/3600000; ms%=3600000; int m=ms/60000; ms%=60000; int s=ms/1000; ms%=1000; return String.format("%02d:%02d:%02d,%03d",h,m,s,ms);} 
 }

@@ -3,6 +3,8 @@ package com.example.audiotext.repository;
 import com.example.audiotext.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
@@ -21,7 +23,7 @@ public class JdbcProjectRepository implements ProjectRepository {
    jdbc.execute("create table if not exists transcription_segments(id integer primary key autoincrement,project_id integer,start_time real,end_time real,text text,confidence real)");
    jdbc.execute("create table if not exists analysis_results(id integer primary key autoincrement,project_id integer,word_count integer,sentence_count integer,paragraph_count integer,unique_word_count integer,average_sentence_length real,words_per_minute real,keywords_json text,filler_words_json text,algorithmic_summary text,created_at text)");
  }
- public Project save(Project p){ LocalDateTime now=LocalDateTime.now(); p.setCreatedAt(now); p.setUpdatedAt(now); jdbc.update("insert into projects(title,original_file_name,original_file_path,status,created_at,updated_at) values(?,?,?,?,?,?)",p.getTitle(),p.getOriginalFileName(),p.getOriginalFilePath(),p.getStatus().name(),now.toString(),now.toString()); Long id=jdbc.queryForObject("select last_insert_rowid()",Long.class); p.setId(id); return p; }
+ public Project save(Project p){ LocalDateTime now=LocalDateTime.now(); p.setCreatedAt(now); p.setUpdatedAt(now); KeyHolder kh=new GeneratedKeyHolder(); jdbc.update(con->{ var ps=con.prepareStatement("insert into projects(title,original_file_name,original_file_path,status,created_at,updated_at) values(?,?,?,?,?,?)", java.sql.Statement.RETURN_GENERATED_KEYS); ps.setString(1,p.getTitle()); ps.setString(2,p.getOriginalFileName()); ps.setString(3,p.getOriginalFilePath()); ps.setString(4,p.getStatus().name()); ps.setString(5,now.toString()); ps.setString(6,now.toString()); return ps; },kh); Number key=kh.getKey(); if(key==null) throw new IllegalStateException("Не удалось получить ID созданного проекта"); p.setId(key.longValue()); return p; }
  public Optional<Project> findById(Long id){ var l=jdbc.query("select * from projects where id=?",this::map,id); return l.stream().findFirst().map(p->{p.setSegments(findSegmentsByProjectId(p.getId())); p.setAnalysisResult(loadAnalysis(p.getId())); return p;}); }
  public List<Project> findAll(){ return jdbc.query("select * from projects order by id desc",this::map); }
  public void update(Project p){ p.setUpdatedAt(LocalDateTime.now()); jdbc.update("update projects set status=?,updated_at=?,raw_text=?,processed_text=?,ai_text=?,error_message=?,duration_seconds=? where id=?",p.getStatus().name(),p.getUpdatedAt().toString(),p.getRawText(),p.getProcessedText(),p.getAiText(),p.getErrorMessage(),p.getDurationSeconds(),p.getId()); }

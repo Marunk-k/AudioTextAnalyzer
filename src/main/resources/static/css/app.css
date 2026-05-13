@@ -15,3 +15,7 @@ body{background:var(--bg-main);color:var(--text-main)} .page-shell{padding-top:1
 .bg-navy{background:var(--navy)!important;color:#fff}
 .project-tabs .nav-link.active{background:var(--pink-soft)!important;border-color:var(--border-soft)!important}
 .project-tabs-panel{background:var(--bg-soft)}
+
+.conf-high{background:#dff3c6;color:#2f4f2f}
+.conf-med{background:#fde7f0;color:#7a2f52}
+.conf-low{background:#f7bdd6;color:#5a1d35}

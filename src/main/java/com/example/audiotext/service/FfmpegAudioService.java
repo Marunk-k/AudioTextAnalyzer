@@ -35,6 +35,10 @@ public class FfmpegAudioService implements AudioService {
             if (code != 0) throw new IllegalStateException("Ошибка конвертации FFmpeg (code=" + code + ")");
             return out;
         } catch (IOException e) {
+            // Fallback: если вход уже WAV, продолжаем без конвертации (демо/локальный режим).
+            if (name.endsWith(".wav")) {
+                return inputFile;
+            }
             throw new IllegalStateException("FFmpeg не найден. Установите FFmpeg или укажите путь в application.yml.", e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

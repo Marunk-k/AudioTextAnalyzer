@@ -25,7 +25,13 @@
   </div>
 
   <div class="row g-3 mb-3">
-    <div class="col-lg-6"><div class="soft-card p-3"><h5>Этапы обработки</h5><ul class="step-list"><li class="step-item done">✓ Файл загружен</li><li class="step-item">✓ Конвертация</li><li class="step-item">✓ Распознавание</li><li class="step-item">✓ Постобработка</li><li class="step-item">✓ Анализ</li></ul></div></div>
+    <div class="col-lg-6"><div class="soft-card p-3"><h5>Этапы обработки</h5><ul class="step-list">
+<li class="step-item" th:classappend="${project.status.name() != 'CREATED' ? ' done' : ''}">✓ Файл загружен</li>
+<li class="step-item" th:classappend="${project.status.name() == 'CONVERTING' || project.status.name() == 'TRANSCRIBING' || project.status.name() == 'POST_PROCESSING' || project.status.name() == 'ANALYZING' || project.status.name() == 'READY' ? ' done' : ''}">✓ Конвертация</li>
+<li class="step-item" th:classappend="${project.status.name() == 'TRANSCRIBING' || project.status.name() == 'POST_PROCESSING' || project.status.name() == 'ANALYZING' || project.status.name() == 'READY' ? ' done' : ''}">✓ Распознавание</li>
+<li class="step-item" th:classappend="${project.status.name() == 'POST_PROCESSING' || project.status.name() == 'ANALYZING' || project.status.name() == 'READY' ? ' done' : ''}">✓ Постобработка</li>
+<li class="step-item" th:classappend="${project.status.name() == 'ANALYZING' || project.status.name() == 'READY' ? ' done' : ''}">✓ Анализ</li>
+</ul></div></div>
     <div class="col-lg-6"><div class="soft-card p-3"><h5>Быстрая статистика</h5><div class="row g-2"><div class="col-6"><div class="metric-card p-2">Слов: <b th:text="${project.analysisResult != null ? project.analysisResult.wordCount : 0}"></b></div></div><div class="col-6"><div class="metric-card p-2">Предложений: <b th:text="${project.analysisResult != null ? project.analysisResult.sentenceCount : 0}"></b></div></div><div class="col-6"><div class="metric-card p-2">Уникальных: <b th:text="${project.analysisResult != null ? project.analysisResult.uniqueWordCount : 0}"></b></div></div><div class="col-6"><div class="metric-card p-2">Скорость: <b th:text="${project.analysisResult != null ? #numbers.formatDecimal(project.analysisResult.wordsPerMinute,1,1) : 0}"></b></div></div></div></div></div>
   </div>
 

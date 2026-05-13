@@ -19,3 +19,10 @@ body{background:var(--bg-main);color:var(--text-main)} .page-shell{padding-top:1
 .conf-high{background:#dff3c6;color:#2f4f2f}
 .conf-med{background:#fde7f0;color:#7a2f52}
 .conf-low{background:#f7bdd6;color:#5a1d35}
+
+.project-tabs-panel pre{white-space:pre-wrap;line-height:1.55;font-size:.98rem;color:var(--text-main)}
+.project-tabs-panel h6{font-weight:700;margin-bottom:.6rem}
+.project-tabs-panel .table{--bs-table-bg:transparent}
+.export-card h6{font-weight:800;letter-spacing:.4px}
+.export-card .btn{width:100%}
+.metric-card{background:var(--bg-soft)}

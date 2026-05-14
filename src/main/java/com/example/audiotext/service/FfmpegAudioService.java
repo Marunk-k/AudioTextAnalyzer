@@ -26,8 +26,8 @@ public class FfmpegAudioService implements AudioService {
     @Override
     public Path convertToWav(Path inputFile, Long projectId) {
         String name = inputFile.getFileName().toString().toLowerCase();
-        if (name.endsWith(".wav")) return inputFile;
         Path out = storage.getConvertedPath(projectId);
+        try { java.nio.file.Files.createDirectories(out.getParent()); } catch (IOException ignored) {}
         List<String> cmd = List.of(props.getAudio().getFfmpegPath(), "-y", "-i", inputFile.toString(), "-ac", "1", "-ar", "16000", "-sample_fmt", "s16", out.toString());
         try {
             Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();

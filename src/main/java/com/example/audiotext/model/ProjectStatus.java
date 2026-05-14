@@ -10,9 +10,16 @@ public enum ProjectStatus {
     READY,
     ERROR;
 
-    public String getDisplayName() {
+    public boolean isProcessing() {
+        return this == CONVERTING
+                || this == TRANSCRIBING
+                || this == POST_PROCESSING
+                || this == ANALYZING;
+    }
+
+    public String getDisplayLabel() {
         return switch (this) {
-            case CREATED -> "Создан";
+            case CREATED -> "Создано";
             case UPLOADED -> "Файл загружен";
             case CONVERTING -> "Конвертация";
             case TRANSCRIBING -> "Распознавание";
@@ -20,6 +27,16 @@ public enum ProjectStatus {
             case ANALYZING -> "Анализ";
             case READY -> "Готово";
             case ERROR -> "Ошибка";
+        };
+    }
+
+    public String getProcessingStage() {
+        return switch (this) {
+            case CONVERTING -> "Конвертация";
+            case TRANSCRIBING -> "Распознавание";
+            case POST_PROCESSING -> "Постобработка";
+            case ANALYZING -> "Анализ";
+            default -> "";
         };
     }
 }

@@ -12,32 +12,25 @@
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
       <div>
         <h2 class="mb-1" th:text="${project.title}"></h2>
-        <form method="post" th:action="@{/projects/{id}/rename(id=${project.id})}" class="d-flex gap-2 mt-2 mb-2">
-          <input name="title" th:value="${project.title}" class="form-control" maxlength="120" required>
-          <button class="btn btn-soft">Переименовать</button>
-        </form>
         <div class="text-muted-custom">Файл: <span th:text="${project.originalFileName}"></span></div>
         <div class="text-muted-custom">Режим распознавания: <span class="badge" th:classappend="${recognitionMode == 'VOSK' ? 'bg-navy' : 'conf-med'}" th:text="${recognitionMode}"></span></div>
       </div>
-      <span id="statusBadge" class="badge rounded-pill bg-navy status-badge" th:text="${project.status.displayName}"></span>
+      <span id="statusBadge" class="badge rounded-pill status-badge" th:classappend="${project.status.name() == 'READY' ? ' bg-success' : (project.status.name() == 'ERROR' ? ' bg-danger' : (project.status.name() == 'UPLOADED' ? ' text-bg-light' : ' bg-navy'))}" th:text="${project.status.displayLabel}"></span>
     </div>
     <div class="mt-3 d-flex flex-wrap gap-2">
-      <form id="processForm" method="post" th:action="@{/projects/{id}/process(id=${project.id})}">
-        <button id="processBtn" class="btn btn-pink pill-button" type="submit">
-          <span class="spinner-border spinner-border-sm d-none" id="processSpinner"></span>
-          <span id="processBtnText">Начать обработку</span>
-        </button>
-      </form>
+      <form method="post" th:action="@{/projects/{id}/process(id=${project.id})}"><button class="btn btn-pink pill-button">Начать обработку</button></form>
+      <form method="post" th:action="@{/projects/{id}/text/reprocess(id=${project.id})}"><button class="btn btn-soft pill-button">Повторить</button></form>
+      <form method="post" th:action="@{/projects/{id}/text/ai-improve(id=${project.id})}"><button class="btn btn-soft pill-button">AI-доработка</button></form>
     </div>
-    <div id="processInfo" class="alert alert-info mt-3 d-none">Идёт обработка аудиофайла. Это может занять некоторое время.</div>
   </div>
 
-  <div id="processingIndicator" class="alert alert-info processing-indicator mb-3" th:classappend="${project.status.name() == 'CONVERTING' || project.status.name() == 'TRANSCRIBING' || project.status.name() == 'POST_PROCESSING' || project.status.name() == 'ANALYZING' ? ' active' : ''}">
-    <div class="d-flex align-items-center gap-2"><span class="spinner-border spinner-border-sm"></span><strong>Идёт обработка</strong></div>
-    <div class="mt-2">Текущий этап: <span id="currentStage" th:text="${project.status}"></span></div>
+  
+  <div id="processingIndicator" class="alert alert-info d-flex align-items-center gap-2" th:if="${project.status.processing}">
+    <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+    <div>Идёт обработка аудиофайла. Текущий этап: <span id="processingStage" th:text="${project.status.processingStage}"></span></div>
   </div>
 
-  <div class="alert alert-danger" id="errorAlert" th:if="${project.status.name() == 'ERROR'}">Ошибка обработки: <span th:text="${project.errorMessage}"></span></div>
+  <div class="alert alert-danger" th:if="${project.status.name() == 'ERROR'}">Ошибка обработки: <span th:text="${project.errorMessage}"></span></div>
 
   <div class="row g-3 mb-3">
     <div class="col-lg-6"><div class="soft-card p-3"><h5>Этапы обработки</h5><ul class="step-list">
@@ -47,23 +40,21 @@
 <li class="step-item" th:classappend="${project.status.name() == 'POST_PROCESSING' || project.status.name() == 'ANALYZING' || project.status.name() == 'READY' ? ' done' : ''}">✓ Постобработка</li>
 <li class="step-item" th:classappend="${project.status.name() == 'ANALYZING' || project.status.name() == 'READY' ? ' done' : ''}">✓ Анализ</li>
 </ul></div></div>
-    <div class="col-lg-6"><div class="soft-card p-3"><h5>Быстрая статистика</h5><div class="row g-2"><div class="col-6"><div class="metric-card p-2">Слов: <b th:text="${project.analysisResult != null ? project.analysisResult.wordCount : 0}"></b></div></div><div class="col-6"><div class="metric-card p-2">Предложений: <b th:text="${project.analysisResult != null ? project.analysisResult.sentenceCount : 0}"></b></div></div><div class="col-6"><div class="metric-card p-2">Уникальных: <b th:text="${project.analysisResult != null ? project.analysisResult.uniqueWordCount : 0}"></b></div></div><div class="col-6"><div class="metric-card p-2">Скорость: <b th:text="${project.analysisResult != null && project.analysisResult.wordsPerMinute > 0 ? #numbers.formatDecimal(project.analysisResult.wordsPerMinute,1,1) : '—'}"></b></div></div></div></div></div>
+    <div class="col-lg-6"><div class="soft-card p-3"><h5>Быстрая статистика</h5><div class="row g-2"><div class="col-6"><div class="metric-card p-2">Слов: <b th:text="${project.analysisResult != null ? project.analysisResult.wordCount : 0}"></b></div></div><div class="col-6"><div class="metric-card p-2">Предложений: <b th:text="${project.analysisResult != null ? project.analysisResult.sentenceCount : 0}"></b></div></div><div class="col-6"><div class="metric-card p-2">Уникальных: <b th:text="${project.analysisResult != null ? project.analysisResult.uniqueWordCount : 0}"></b></div></div><div class="col-6"><div class="metric-card p-2">Скорость: <b th:text="${project.analysisResult != null ? #numbers.formatDecimal(project.analysisResult.wordsPerMinute,1,1) : 0}"></b></div></div></div></div></div>
   </div>
 
   <ul class="nav nav-tabs project-tabs" role="tablist">
     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#raw">Исходный текст</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#processed">Обработанный текст</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ai">AI-постобработка</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ai">AI-версия</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis">Анализ</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#segments">Временные фрагменты</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#export">Экспорт</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#export">Экспорт</button></li>
   </ul>
   <div class="tab-content soft-card p-3 project-tabs-panel">
     <div class="tab-pane fade show active" id="raw"><pre th:text="${project.rawText ?: 'Нет исходного текста'}"></pre></div>
-    <div class="tab-pane fade" id="processed"><form method="post" th:action="@{/projects/{id}/text/reprocess(id=${project.id})}"><button class="btn btn-soft btn-sm mb-2" type="submit">Повторить обработку</button></form><form method="post" th:action="@{/projects/{id}/text/processed(id=${project.id})}"><textarea id="processedText" class="form-control textarea-lg" name="processedText" th:text="${project.processedText}"></textarea><button class="btn btn-pink mt-2">Сохранить текст</button></form></div>
-    <div class="tab-pane fade" id="ai"><div class="alert alert-info">AI-постобработка предназначена для улучшения пунктуации, грамматики и структуры текста без изменения смысла.</div><pre th:text="${project.aiText ?: 'AI-постобработка пока не выполнена'}"></pre><form method="post" th:action="@{/projects/{id}/text/ai-improve(id=${project.id})}"><button class="btn btn-soft btn-sm" type="submit">Запустить AI-постобработку</button></form></div>
-    <div class="tab-pane fade" id="analysis"><div th:if="${project.analysisResult == null}" class="empty-state">Нет анализа</div><div th:if="${project.analysisResult != null}"><div class="row g-2 mb-3"><div class="col-md-4"><div class="metric-card p-2">Абзацев: <b th:text="${project.analysisResult.paragraphCount}"></b></div></div><div class="col-md-4"><div class="metric-card p-2">Средняя длина: <b th:text="${#numbers.formatDecimal(project.analysisResult.averageSentenceLength,1,1)}"></b></div></div><div class="col-md-4"><div class="metric-card p-2">Слов/мин: <b th:text="${project.analysisResult.wordsPerMinute > 0 ? #numbers.formatDecimal(project.analysisResult.wordsPerMinute,1,1) : '—'}"></b></div></div></div><div class="mb-2 text-muted-custom" th:text="${project.analysisResult.durationSeconds > 0 ? 'Длительность: ' + T(com.example.audiotext.util.TimeUtils).secondsToHumanReadableTime(project.analysisResult.durationSeconds) : 'Длительность не определена'}"></div><div class="row g-3"><div class="col-md-6"><h6>Ключевые слова</h6><table class="table table-sm"><tr><th>Слово</th><th>Частота</th></tr><tr th:each="e : ${project.analysisResult.keywordFrequency.entrySet()}"><td th:text="${e.key}"></td><td th:text="${e.value}"></td></tr></table></div><div class="col-md-6"><h6>Слова-паразиты</h6><table class="table table-sm"><tr><th>Слово</th><th>Частота</th></tr><tr th:each="e : ${project.analysisResult.fillerWordFrequency.entrySet()}"><td th:text="${e.key}"></td><td th:text="${e.value}"></td></tr></table></div></div><h6 class="mt-3">Краткое содержание</h6><p th:text="${project.analysisResult.algorithmicSummary}"></p></div></div>
-    <div class="tab-pane fade" id="segments"><div th:if="${#lists.isEmpty(project.segments)}" class="empty-state">Временные фрагменты появятся после обработки аудиофайла.</div><table th:if="${!#lists.isEmpty(project.segments)}" class="table"><tr><th>Начало</th><th>Конец</th><th>Текст</th><th>Уверенность</th></tr><tr th:each="s:${project.segments}"><td th:text="${T(com.example.audiotext.util.TimeUtils).secondsToHumanReadableTime(s.start)}"></td><td th:text="${T(com.example.audiotext.util.TimeUtils).secondsToHumanReadableTime(s.end)}"></td><td th:text="${s.text}"></td><td><span th:text="${#numbers.formatDecimal(s.confidence * 100,1,0) + '%'}" class="badge" th:classappend="${s.confidence>=0.8?'conf-high':(s.confidence>=0.6?'conf-med':'conf-low')}"></span></td></tr></table></div>
+    <div class="tab-pane fade" id="processed"><form method="post" th:action="@{/projects/{id}/text/processed(id=${project.id})}"><textarea class="form-control textarea-lg" name="processedText" th:text="${project.processedText}"></textarea><button class="btn btn-pink mt-2">Сохранить текст</button></form></div>
+    <div class="tab-pane fade" id="ai"><div class="alert alert-warning">Если GigaChat не настроен, используется демонстрационный AI-режим.</div><pre th:text="${project.aiText ?: 'AI-текст пока отсутствует'}"></pre></div>
+    <div class="tab-pane fade" id="analysis"><div th:if="${project.analysisResult == null}" class="empty-state">Нет анализа</div><div th:if="${project.analysisResult != null}"><div class="row g-2 mb-3"><div class="col-md-4"><div class="metric-card p-2">Абзацев: <b th:text="${project.analysisResult.paragraphCount}"></b></div></div><div class="col-md-4"><div class="metric-card p-2">Средняя длина: <b th:text="${#numbers.formatDecimal(project.analysisResult.averageSentenceLength,1,1)}"></b></div></div><div class="col-md-4"><div class="metric-card p-2">Слов/мин: <b th:text="${#numbers.formatDecimal(project.analysisResult.wordsPerMinute,1,1)}"></b></div></div></div><div class="row g-3"><div class="col-md-6"><h6>Ключевые слова</h6><table class="table table-sm"><tr><th>Слово</th><th>Частота</th></tr><tr th:each="e : ${project.analysisResult.keywordFrequency.entrySet()}"><td th:text="${e.key}"></td><td th:text="${e.value}"></td></tr></table></div><div class="col-md-6"><h6>Слова-паразиты</h6><table class="table table-sm"><tr><th>Слово</th><th>Частота</th></tr><tr th:each="e : ${project.analysisResult.fillerWordFrequency.entrySet()}"><td th:text="${e.key}"></td><td th:text="${e.value}"></td></tr></table></div></div><h6 class="mt-3">Краткое содержание</h6><p th:text="${project.analysisResult.algorithmicSummary}"></p></div></div>
     <div class="tab-pane fade" id="export"><div class="row g-2"><div class="col-md-3" th:each="fmt: ${exportFormats}"><div class="export-card p-3"><h6 th:text="${#strings.toUpperCase(fmt)}"></h6><a class="btn btn-soft btn-sm" th:href="@{/projects/{id}/export/{f}(id=${project.id},f=${fmt})}">Скачать</a></div></div></div></div>
   </div>
 </main>

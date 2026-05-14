@@ -11,8 +11,7 @@ main{flex:1}
 .btn-pink{background:var(--pink);border:none}.btn-navy{background:var(--navy);color:#fff}.btn-soft{background:var(--bg-soft);border:1px solid var(--border-soft)}.pill-button{border-radius:999px}
 .workspace-grid{display:grid;grid-template-columns:2fr 1fr;gap:1rem}.step-list{list-style:none;padding:0}.step-item{padding:.5rem 0;border-bottom:1px dashed var(--border-soft)}.step-item.done{color:#2f7d32}
 .project-tabs .nav-link{color:var(--text-main)!important}.empty-state{padding:2rem;text-align:center;background:var(--bg-soft);border-radius:var(--radius-lg)}
-.text-muted-custom{color:var(--text-muted)} .footer{background:var(--bg-soft);margin-top:auto}.minimalist-footer{min-height:20px}
-.textarea-lg{min-height:320px;resize:vertical;overflow-y:hidden;width:100%}
+.text-muted-custom{color:var(--text-muted)} .footer{background:var(--bg-soft);margin-top:auto;min-height:96px;padding:24px 0} .textarea-lg{min-height:320px}
 @media (max-width: 991px){.workspace-grid{grid-template-columns:1fr}}
 
 .project-head{background:var(--bg-soft);border:1px solid var(--border-soft)}
@@ -30,5 +29,3 @@ main{flex:1}
 .export-card h6{font-weight:800;letter-spacing:.4px}
 .export-card .btn{width:100%}
 .metric-card{background:var(--bg-soft)}
-.processing-indicator{display:none}
-.processing-indicator.active{display:block}

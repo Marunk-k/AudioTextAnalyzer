@@ -24,6 +24,9 @@
     </div>
   </div>
 
+  
+  <div class="alert alert-danger" th:if="${project.status.name() == 'ERROR'}">Ошибка обработки: <span th:text="${project.errorMessage}"></span></div>
+
   <div class="row g-3 mb-3">
     <div class="col-lg-6"><div class="soft-card p-3"><h5>Этапы обработки</h5><ul class="step-list">
 <li class="step-item" th:classappend="${project.status.name() != 'CREATED' ? ' done' : ''}">✓ Файл загружен</li>

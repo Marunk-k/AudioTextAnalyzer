@@ -1,0 +1,28 @@
+:root {--bg-main:#f7f1e3;--bg-soft:#fffaf0;--navy:#050a2e;--navy-2:#09123d;--pink:#f7bdd6;--pink-soft:#fde7f0;--sage:#a8bd8f;--sage-soft:#edf7df;--mint:#dff3c6;--card:#fffdf6;--text-main:#080b21;--text-muted:#6f7280;--border-soft:rgba(5,10,46,.12);--shadow-soft:0 22px 60px rgba(5,10,46,.12);--radius-xl:32px;--radius-lg:24px;--radius-md:16px}
+body{background:var(--bg-main);color:var(--text-main)} .page-shell{padding-top:1.5rem}
+.nav-shell{background:var(--navy)} .nav-pill{background:var(--navy-2);border-radius:999px;padding:.25rem .75rem}.nav-link{color:#fff!important}
+.hero-section{background:var(--navy);color:#fff;border-radius:var(--radius-xl);padding:2rem;box-shadow:var(--shadow-soft)}
+.hero-card{background:var(--bg-soft);color:var(--text-main);border-radius:var(--radius-lg);padding:1.5rem}
+.feature-card,.soft-card,.upload-card,.metric-card,.export-card{background:var(--card);border:1px solid var(--border-soft);border-radius:var(--radius-md);box-shadow:var(--shadow-soft)}
+.dark-card{background:var(--navy);color:#fff;border-radius:var(--radius-lg)}
+.btn-pink{background:var(--pink);border:none}.btn-navy{background:var(--navy);color:#fff}.btn-soft{background:var(--bg-soft);border:1px solid var(--border-soft)}.pill-button{border-radius:999px}
+.workspace-grid{display:grid;grid-template-columns:2fr 1fr;gap:1rem}.step-list{list-style:none;padding:0}.step-item{padding:.5rem 0;border-bottom:1px dashed var(--border-soft)}.step-item.done{color:#2f7d32}
+.project-tabs .nav-link{color:var(--text-main)!important}.empty-state{padding:2rem;text-align:center;background:var(--bg-soft);border-radius:var(--radius-lg)}
+.text-muted-custom{color:var(--text-muted)} .footer{background:var(--bg-soft)} .textarea-lg{min-height:320px}
+@media (max-width: 991px){.workspace-grid{grid-template-columns:1fr}}
+
+.project-head{background:var(--bg-soft);border:1px solid var(--border-soft)}
+.bg-navy{background:var(--navy)!important;color:#fff}
+.project-tabs .nav-link.active{background:var(--pink-soft)!important;border-color:var(--border-soft)!important}
+.project-tabs-panel{background:var(--bg-soft)}
+
+.conf-high{background:#dff3c6;color:#2f4f2f}
+.conf-med{background:#fde7f0;color:#7a2f52}
+.conf-low{background:#f7bdd6;color:#5a1d35}
+
+.project-tabs-panel pre{white-space:pre-wrap;line-height:1.55;font-size:.98rem;color:var(--text-main)}
+.project-tabs-panel h6{font-weight:700;margin-bottom:.6rem}
+.project-tabs-panel .table{--bs-table-bg:transparent}
+.export-card h6{font-weight:800;letter-spacing:.4px}
+.export-card .btn{width:100%}
+.metric-card{background:var(--bg-soft)}

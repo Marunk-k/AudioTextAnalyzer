@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: audiotext-analyzer
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+app:
+  storage:
+    upload-dir: data/uploads
+    converted-dir: data/converted
+    export-dir: data/exports
+    database-path: data/db/audiotext.db
+  audio:
+    ffmpeg-path: ffmpeg
+    allowed-extensions: [wav, mp3, m4a, ogg, flac]
+  vosk:
+    enabled: true
+    model-path: models/vosk-model-small-ru
+    sample-rate: 16000
+  gigachat:
+    enabled: false
+    client-id:
+    client-secret:
+    auth-url:
+    api-url:
+  processing:
+    use-mock-transcription-if-vosk-unavailable: true
+    low-confidence-threshold: 0.6
+    filler-words-path: classpath:config/filler_words_ru.txt
+    stop-words-path: classpath:config/stop_words_ru.txt
+    term-dictionary-path: classpath:config/term_dictionary.json

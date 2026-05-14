@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="navbar" class="navbar navbar-expand-lg sticky-top nav-shell">
+  <div class="container">
+    <a class="navbar-brand fw-bold text-light" href="/">AudioText Analyzer</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav mx-auto nav-pill">
+        <li class="nav-item"><a class="nav-link" href="/">Главная</a></li>
+        <li class="nav-item"><a class="nav-link" href="/workspace">Рабочая область</a></li>
+        <li class="nav-item"><a class="nav-link" href="/projects">Проекты</a></li>
+        <li class="nav-item"><a class="nav-link" href="/help">Справка</a></li>
+      </ul>
+      <a class="btn btn-pink pill-button" href="/upload">Загрузить аудио</a>
+      <a class="btn btn-soft ms-2" href="/settings">⚙</a>
+    </div>
+  </div>
+</nav>
+</body>
+</html>

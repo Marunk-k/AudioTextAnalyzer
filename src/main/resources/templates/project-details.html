@@ -13,6 +13,7 @@
       <div>
         <h2 class="mb-1" th:text="${project.title}"></h2>
         <div class="text-muted-custom">Файл: <span th:text="${project.originalFileName}"></span></div>
+        <div class="text-muted-custom">Режим распознавания: <span class="badge" th:classappend="${recognitionMode == 'VOSK' ? 'bg-navy' : 'conf-med'}" th:text="${recognitionMode}"></span></div>
       </div>
       <span id="statusBadge" class="badge rounded-pill bg-navy status-badge" th:text="${project.status}"></span>
     </div>

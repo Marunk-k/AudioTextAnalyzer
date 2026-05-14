@@ -21,6 +21,13 @@ public class SmartTranscriptionService implements TranscriptionService {
         this.vosk = vosk;
     }
 
+
+    public String currentMode() {
+        String mp = props.getVosk().getModelPath();
+        boolean modelExists = mp != null && !mp.isBlank() && Files.exists(Path.of(mp));
+        return (props.getVosk().isEnabled() && modelExists) ? "VOSK" : "MOCK";
+    }
+
     @Override
     public TranscriptionResult transcribe(Path wavFile) {
         boolean voskEnabled = props.getVosk().isEnabled();

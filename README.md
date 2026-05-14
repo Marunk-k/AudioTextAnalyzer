@@ -1,6 +1,6 @@
 # AudioText Analyzer
 
-Веб-приложение: загрузка аудио, транскрибация (mock/Vosk), постобработка, анализ и экспорт.
+Веб-MVP для дипломной работы: загрузка аудио, транскрибация (mock/Vosk), постобработка, анализ и экспорт.
 
 ## Что уже реализовано
 - Загрузка аудиофайла и создание проекта.
@@ -8,7 +8,7 @@
 - Обработка проекта (mock-транскрибация -> постобработка -> анализ).
 - Просмотр raw/processed текста.
 - Редактирование processed текста и повторная постобработка.
-- Экспорт в TXT, DOCX, PDF и JSON.
+- Экспорт в TXT и JSON.
 - Глобальная обработка ошибок.
 
 ## Запуск
@@ -31,4 +31,12 @@ mvn spring-boot:run
 - Endpoint статуса `GET /projects/{id}/status` + JS polling на странице проекта.
 - Кнопка `Улучшить через AI` с `MockGigaChatService` и сохранением `aiText`.
 
-- Экспорт: TXT, DOCX, PDF и JSON.
+- Экспорт расширен: DOCX и PDF (PDF в текущем MVP использует базовый ASCII-safe вывод).
+
+
+## AI-постобработка через GigaChat
+- Используется библиотека: `chat.giga:gigachat-java:0.1.10`.
+- Для включения задайте переменные окружения: `GIGACHAT_CREDENTIALS`, `GIGACHAT_SCOPE=GIGACHAT_API_PERS`, `GIGACHAT_MODEL=GigaChat`.
+- В `application.yml` установите `app.gigachat.enabled=true`.
+- Не храните credentials в репозитории.
+- Если credentials не заданы, приложение запускается с локальной fallback-реализацией.

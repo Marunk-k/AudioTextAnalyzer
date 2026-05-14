@@ -1,42 +1,33 @@
+const STATUS_LABELS={CREATED:'Создан',UPLOADED:'Файл загружен',CONVERTING:'Конвертация',TRANSCRIBING:'Распознавание',POST_PROCESSING:'Постобработка',ANALYZING:'Анализ',READY:'Готово',ERROR:'Ошибка'};
+const PROCESSING_STATUSES=new Set(['CONVERTING','TRANSCRIBING','POST_PROCESSING','ANALYZING']);
+
 function pollStatus(projectId){
   const badge=document.getElementById('statusBadge');
-  const indicator=document.getElementById('processingIndicator');
-  const stage=document.getElementById('processingStage');
+  const processingAlert=document.getElementById('processingAlert');
+  const processingText=document.getElementById('processingStatusText');
   if(!badge) return;
 
-  const labels={
-    CREATED:'Создано',
-    UPLOADED:'Файл загружен',
-    CONVERTING:'Конвертация',
-    TRANSCRIBING:'Распознавание',
-    POST_PROCESSING:'Постобработка',
-    ANALYZING:'Анализ',
-    READY:'Готово',
-    ERROR:'Ошибка'
-  };
+  const processForm=document.getElementById('processForm');
+  if(processForm){
+    processForm.addEventListener('submit',()=>{
+      const btn=document.getElementById('processBtn');
+      const spinner=document.getElementById('processBtnSpinner');
+      const text=btn?.querySelector('.btn-text');
+      if(btn) btn.disabled=true;
+      if(spinner) spinner.classList.remove('d-none');
+      if(text) text.textContent='Обработка...';
+      if(processingAlert) processingAlert.classList.remove('d-none');
+      if(processingText) processingText.textContent='Конвертация';
+    });
+  }
 
-  const processingStatuses=['CONVERTING','TRANSCRIBING','POST_PROCESSING','ANALYZING'];
-
-  const update=(d)=>{
+  setInterval(()=>{fetch(`/projects/${projectId}/status`).then(r=>r.json()).then(d=>{
     const status=d.status;
-    badge.innerText=labels[status]||status;
-    badge.className='badge rounded-pill status-badge';
-    if(status==='READY') badge.classList.add('bg-success');
-    else if(status==='ERROR') badge.classList.add('bg-danger');
-    else if(status==='UPLOADED') badge.classList.add('text-bg-light');
-    else badge.classList.add('bg-navy');
-
-    if(indicator){
-      if(processingStatuses.includes(status)){
-        indicator.classList.remove('d-none');
-        if(stage) stage.innerText=labels[status]||status;
-      }else{
-        indicator.classList.add('d-none');
-      }
+    badge.innerText=STATUS_LABELS[status]||status;
+    if(processingAlert){
+      if(PROCESSING_STATUSES.has(status)){processingAlert.classList.remove('d-none');}
+      else{processingAlert.classList.add('d-none');}
     }
-  };
-
-  setInterval(()=>{
-    fetch(`/projects/${projectId}/status`).then(r=>r.json()).then(update).catch(()=>{});
-  },3000);
+    if(processingText){processingText.textContent=STATUS_LABELS[status]||status;}
+  });},3000);
 }

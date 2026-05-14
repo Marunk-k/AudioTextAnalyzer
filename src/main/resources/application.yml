@@ -20,10 +20,11 @@ app:
     sample-rate: 16000
   gigachat:
     enabled: false
-    client-id:
-    client-secret:
-    auth-url:
-    api-url:
+    credentials: ${GIGACHAT_CREDENTIALS:}
+    scope: ${GIGACHAT_SCOPE:GIGACHAT_API_PERS}
+    model: ${GIGACHAT_MODEL:GigaChat}
+    verify-ssl-certs: false
+    timeout-seconds: 60
   processing:
     use-mock-transcription-if-vosk-unavailable: true
     low-confidence-threshold: 0.6

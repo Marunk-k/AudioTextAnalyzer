@@ -24,4 +24,18 @@ class TextPostProcessingServiceTest {
         var result = service.process("привет мир", words);
         assertTrue(result.getProcessedText().contains("."));
     }
+
+    @Test
+    void shortTextGetsFinalDot() {
+        var result = service.process("короткий текст", List.of());
+        assertTrue(result.getProcessedText().trim().endsWith("."));
+    }
+
+    @Test
+    void dictionaryReplacementWorksWithWordInfo() {
+        var words = List.of(new WordInfo("джава",0,0.2,0.95), new WordInfo("воск",0.3,0.5,0.93));
+        var result = service.process("джава воск", words);
+        assertTrue(result.getProcessedText().contains("Java"));
+        assertTrue(result.getProcessedText().contains("Vosk"));
+    }
 }

@@ -25,16 +25,17 @@ class AnalysisControllerTest {
 
         Project project = new Project();
         project.setId(1L);
-        project.setProcessedText("исходный текст");
+        project.setRawText("сырой текст");
+        project.setProcessedText("очищенный черновик");
         project.setDurationSeconds(90.0);
 
         TextAnalysisResult analyzed = new TextAnalysisResult();
         analyzed.algorithmicSummary = "старый";
 
         when(repo.findById(1L)).thenReturn(Optional.of(project));
-        when(ai.improveText("исходный текст")).thenReturn("Исправленный текст.");
-        when(ai.summarizeText("Исправленный текст.")).thenReturn("Краткое содержание.");
-        when(analysis.analyze(eq("Исправленный текст."), any())).thenReturn(analyzed);
+        when(ai.improveText("очищенный черновик")).thenReturn("AI текст.");
+        when(ai.summarizeText("AI текст.")).thenReturn("Краткое содержание.");
+        when(analysis.analyze(eq("AI текст."), any())).thenReturn(analyzed);
 
         AnalysisController controller = new AnalysisController(repo, ai, analysis);
         RedirectAttributesModelMap attrs = new RedirectAttributesModelMap();
@@ -42,8 +43,10 @@ class AnalysisControllerTest {
         String view = controller.aiImprove(1L, attrs);
 
         assertEquals("redirect:/projects/1", view);
-        assertEquals("Исправленный текст.", project.getAiText());
+        assertEquals("AI текст.", project.getAiText());
         assertEquals("Краткое содержание.", project.getAnalysisResult().algorithmicSummary);
+        verify(ai).improveText("очищенный черновик");
+        verify(ai).summarizeText("AI текст.");
         verify(repo).update(project);
         verify(repo).updateAnalysis(1L, analyzed);
     }

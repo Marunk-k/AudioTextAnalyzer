@@ -1,6 +1,5 @@
 package com.example.audiotext.service;
 
-import com.example.audiotext.model.WordInfo;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -11,18 +10,11 @@ class TextPostProcessingServiceTest {
     private final TextPostProcessingService service = new TextPostProcessingService();
 
     @Test
-    void removesDuplicatesAndFillersAndReplacesTerms() {
-        var result = service.process("ну я я изучаю джава как бы воск", List.of());
-        assertFalse(result.getProcessedText().toLowerCase().contains("ну"));
-        assertTrue(result.getProcessedText().contains("Java"));
-        assertTrue(result.getProcessedText().contains("Vosk"));
-    }
-
-    @Test
-    void addsPunctuationFromPauses() {
-        var words = List.of(new WordInfo("привет",0,0.1,0.9), new WordInfo("мир",1.1,1.2,0.9));
-        var result = service.process("привет мир", words);
-        assertTrue(result.getProcessedText().contains("."));
+    void noAggressiveSentenceSplitAndFinalDot() {
+        var result = service.process("джо ланс дэйл левитация на мгновение наступила тьма а потом стало светло", List.of());
+        assertFalse(result.getProcessedText().contains("левитация на. Мгновение"));
+        assertTrue(result.getProcessedText().endsWith("."));
+        assertTrue(Character.isUpperCase(result.getProcessedText().charAt(0)));
     }
 
     @Test
@@ -32,9 +24,11 @@ class TextPostProcessingServiceTest {
     }
 
     @Test
-    void dictionaryReplacementWorksWithWordInfo() {
-        var words = List.of(new WordInfo("джава",0,0.2,0.95), new WordInfo("воск",0.3,0.5,0.93));
-        var result = service.process("джава воск", words);
+    void removesFillersDuplicatesAndReplacesTerms() {
+        var result = service.process("ну я я как бы изучаю джава и воск", List.of());
+        assertFalse(result.getProcessedText().toLowerCase().contains("ну"));
+        assertFalse(result.getProcessedText().toLowerCase().contains("как бы"));
+        assertFalse(result.getProcessedText().toLowerCase().contains("я я"));
         assertTrue(result.getProcessedText().contains("Java"));
         assertTrue(result.getProcessedText().contains("Vosk"));
     }

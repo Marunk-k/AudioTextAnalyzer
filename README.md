@@ -32,3 +32,11 @@ mvn spring-boot:run
 - Кнопка `Улучшить через AI` с `MockGigaChatService` и сохранением `aiText`.
 
 - Экспорт расширен: DOCX и PDF (PDF в текущем MVP использует базовый ASCII-safe вывод).
+
+
+## AI-постобработка через GigaChat
+- Используется библиотека: `chat.giga:gigachat-java:0.1.10`.
+- Для включения задайте переменные окружения: `GIGACHAT_CREDENTIALS`, `GIGACHAT_SCOPE=GIGACHAT_API_PERS`, `GIGACHAT_MODEL=GigaChat`.
+- В `application.yml` установите `app.gigachat.enabled=true`.
+- Не храните credentials в репозитории.
+- Если credentials не заданы, приложение запускается с локальной fallback-реализацией.

@@ -25,7 +25,9 @@ public class TextController {
     public String saveProcessed(@PathVariable Long id, @RequestParam String processedText) {
         var p = repo.findById(id).orElseThrow();
         p.setProcessedText(processedText);
-        p.setAnalysisResult(analysis.analyze(processedText, new TranscriptionResult()));
+        var analysisContext = new TranscriptionResult();
+        analysisContext.setDurationSeconds(p.getDurationSeconds() != null ? p.getDurationSeconds() : 0);
+        p.setAnalysisResult(analysis.analyze(processedText, analysisContext));
         repo.update(p);
         repo.updateAnalysis(id, p.getAnalysisResult());
         return "redirect:/projects/" + id;
@@ -35,7 +37,9 @@ public class TextController {
     public String reprocess(@PathVariable Long id) {
         var p = repo.findById(id).orElseThrow();
         p.setProcessedText(post.process(p.getRawText(), java.util.List.of()).getProcessedText());
-        p.setAnalysisResult(analysis.analyze(p.getProcessedText(), new TranscriptionResult()));
+        var analysisContext = new TranscriptionResult();
+        analysisContext.setDurationSeconds(p.getDurationSeconds() != null ? p.getDurationSeconds() : 0);
+        p.setAnalysisResult(analysis.analyze(p.getProcessedText(), analysisContext));
         repo.update(p);
         repo.updateAnalysis(id, p.getAnalysisResult());
         return "redirect:/projects/" + id;

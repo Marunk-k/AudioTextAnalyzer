@@ -23,7 +23,10 @@ public class ProcessingService {
         Path wav=audio.convertToWav(source,id); p.setConvertedFilePath(wav.toString()); repo.update(p);
 
         p.setStatus(ProjectStatus.TRANSCRIBING); repo.update(p);
-        var t=tr.transcribe(wav); p.setRawText(t.getRawText()); p.setDurationSeconds(t.getDurationSeconds()); repo.saveSegments(id, t.getSegments()); repo.update(p);
+        double audioDuration = audio.getDurationSeconds(wav);
+        var t=tr.transcribe(wav);
+        double duration = t.getDurationSeconds() > 0 ? t.getDurationSeconds() : (audioDuration > 0 ? audioDuration : 0);
+        p.setRawText(t.getRawText()); p.setDurationSeconds(duration); t.setDurationSeconds(duration); repo.saveSegments(id, t.getSegments()); repo.update(p);
 
         p.setStatus(ProjectStatus.POST_PROCESSING); repo.update(p); var pr=pp.process(p.getRawText(), t.getWords()); p.setProcessedText(pr.getProcessedText()); repo.update(p);
         p.setStatus(ProjectStatus.ANALYZING); repo.update(p); p.setAnalysisResult(an.analyze(p.getProcessedText(),t)); repo.updateAnalysis(id,p.getAnalysisResult());

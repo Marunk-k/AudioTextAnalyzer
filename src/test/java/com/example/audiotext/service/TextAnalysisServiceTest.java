@@ -24,4 +24,13 @@ class TextAnalysisServiceTest {
         assertTrue(r.uniqueWordCount >= 4);
         assertNotNull(r.algorithmicSummary);
     }
+
+    @Test
+    void wordsPerMinuteCalculatedFromDuration() {
+        String text = String.join(" ", java.util.Collections.nCopies(120, "слово"));
+        TranscriptionResult tr = new TranscriptionResult();
+        tr.setDurationSeconds(60);
+        var r = service.analyze(text, tr);
+        assertEquals(120.0, r.wordsPerMinute, 0.001);
+    }
 }

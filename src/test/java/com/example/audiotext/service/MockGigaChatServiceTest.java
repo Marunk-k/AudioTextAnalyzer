@@ -15,4 +15,10 @@ class MockGigaChatServiceTest {
         var s=new MockGigaChatService();
         assertFalse(s.improveText("  test  ").isBlank());
     }
+
+    @Test
+    void summarizeTextHandlesNull(){
+        var s=new MockGigaChatService();
+        assertDoesNotThrow(() -> s.summarizeText(null));
+    }
 }

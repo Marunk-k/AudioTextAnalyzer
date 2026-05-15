@@ -34,9 +34,26 @@ mvn spring-boot:run
 - Экспорт расширен: DOCX и PDF (PDF в текущем MVP использует базовый ASCII-safe вывод).
 
 
-## AI-постобработка через GigaChat
-- Используется библиотека: `chat.giga:gigachat-java:0.1.10`.
-- Для включения задайте переменные окружения: `GIGACHAT_CREDENTIALS`, `GIGACHAT_SCOPE=GIGACHAT_API_PERS`, `GIGACHAT_MODEL=GigaChat`.
-- В `application.yml` установите `app.gigachat.enabled=true`.
-- Не храните credentials в репозитории.
-- Если credentials не заданы, приложение запускается с локальной fallback-реализацией.
+## Проверка реальной AI-постобработки
+1. Задайте переменные окружения:
+   - `GIGACHAT_CREDENTIALS=...`
+   - `GIGACHAT_SCOPE=GIGACHAT_API_PERS`
+   - `GIGACHAT_MODEL=GigaChat`
+2. В `application.yml` включите:
+   - `app.gigachat.enabled: true`
+3. Запустите приложение:
+   ```bash
+   mvn spring-boot:run
+   ```
+4. Откройте проект, где есть `processedText`.
+5. Нажмите кнопку **«Запустить AI-постобработку»**.
+6. Проверьте результат:
+   - `aiText` стал более грамотным;
+   - появились знаки препинания;
+   - текст разбит на абзацы;
+   - краткое содержание обновилось.
+
+Важно:
+- credentials нельзя коммитить в репозиторий;
+- если credentials не заданы, используется локальный fallback;
+- fallback не гарантирует качественную пунктуацию.

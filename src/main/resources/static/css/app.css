@@ -26,3 +26,8 @@ body{background:var(--bg-main);color:var(--text-main)} .page-shell{padding-top:1
 .export-card h6{font-weight:800;letter-spacing:.4px}
 .export-card .btn{width:100%}
 .metric-card{background:var(--bg-soft)}
+
+.auth-page{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 140px)}
+.auth-card{max-width:520px;width:100%;background:var(--card);border:1px solid var(--border-soft);border-radius:var(--radius-lg);box-shadow:var(--shadow-soft)}
+.auth-card .form-control{border-radius:12px;padding:.65rem .85rem}
+.alert{border-radius:12px}

@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -20,12 +21,15 @@ public class FileSystemStorageService implements StorageService {
         this.p = p;
     }
 
-    public Path storeUploadedFile(MultipartFile file, String title) {
+    public Path storeUploadedFile(MultipartFile file, String projectTitle) {
         try {
             String safeName = buildSafeFileName(file.getOriginalFilename());
             Path uploadDir = Path.of(p.getStorage().getUploadDir());
             Files.createDirectories(uploadDir);
             Path dest = uploadDir.resolve(safeName).normalize();
+            if (!dest.startsWith(uploadDir.normalize())) {
+                throw new IllegalArgumentException("Некорректный путь сохранения файла.");
+            }
             try (InputStream in = file.getInputStream()) {
                 Files.copy(in, dest, StandardCopyOption.REPLACE_EXISTING);
             }
@@ -36,9 +40,16 @@ public class FileSystemStorageService implements StorageService {
     }
 
     private String buildSafeFileName(String originalFilename) {
-        String baseName = originalFilename == null ? "file" : Path.of(originalFilename).getFileName().toString();
+        String baseName = "file";
+        if (originalFilename != null && !originalFilename.isBlank()) {
+            try {
+                baseName = Path.of(originalFilename).getFileName().toString();
+            } catch (InvalidPathException ignored) {
+                baseName = originalFilename;
+            }
+        }
         String sanitized = baseName.replaceAll("[^a-zA-Z0-9._-]", "_");
-        if (sanitized.isBlank()) sanitized = "file";
+        if (sanitized.isBlank() || sanitized.equals(".") || sanitized.equals("..")) sanitized = "file";
         return UUID.randomUUID() + "_" + sanitized;
     }
 

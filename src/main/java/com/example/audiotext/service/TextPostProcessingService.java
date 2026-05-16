@@ -15,8 +15,9 @@ import java.util.regex.Pattern;
 public class TextPostProcessingService {
     private final Set<String> fillers;
     private final Map<String, String> dictionary;
+    private final DictionaryService dictionaries;
 
-    public TextPostProcessingService() { this.fillers = loadFillers(); this.dictionary = loadDictionary(); }
+    public TextPostProcessingService(DictionaryService dictionaries) { this.fillers = loadFillers(); this.dictionary = loadDictionary(); this.dictionaries = dictionaries; }
 
     public PostProcessingResult process(String rawText, List<WordInfo> words) {
         PostProcessingResult r = new PostProcessingResult();
@@ -32,7 +33,8 @@ public class TextPostProcessingService {
 
         // 4-5) Безопасные замены терминов по границам слов.
         String text = String.join(" ", tokens);
-        for (var e : dictionary.entrySet()) {
+        Map<String, String> effectiveDictionary = dictionaries.getEffectiveDictionaryForCurrentUser(dictionary);
+        for (var e : effectiveDictionary.entrySet()) {
             String before = text;
             text = Pattern.compile("(?i)\\b" + Pattern.quote(e.getKey()) + "\\b").matcher(text).replaceAll(e.getValue());
             if (!before.equals(text)) r.getReplacements().put(e.getKey(), e.getValue());

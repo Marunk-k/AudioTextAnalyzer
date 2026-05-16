@@ -36,7 +36,9 @@ public class TextPostProcessingService {
         Map<String, String> effectiveDictionary = dictionaries.getEffectiveDictionaryForCurrentUser(dictionary);
         for (var e : effectiveDictionary.entrySet()) {
             String before = text;
-            text = Pattern.compile("(?i)\\b" + Pattern.quote(e.getKey()) + "\\b").matcher(text).replaceAll(e.getValue());
+            text = Pattern.compile("(?iu)(?<![\\p{L}\\p{N}_])" + Pattern.quote(e.getKey()) + "(?![\\p{L}\\p{N}_])")
+                    .matcher(text)
+                    .replaceAll(e.getValue());
             if (!before.equals(text)) r.getReplacements().put(e.getKey(), e.getValue());
         }
 

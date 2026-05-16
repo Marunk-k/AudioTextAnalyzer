@@ -45,4 +45,9 @@ public class HomeController {
         ));
         return "help";
     }
+
+    @GetMapping({"/settings", "/dictionaries"})
+    public String settings() {
+        return "settings";
+    }
 }

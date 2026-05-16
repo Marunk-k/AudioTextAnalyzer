@@ -4,6 +4,7 @@ import com.example.audiotext.model.ProjectStatus;
 import com.example.audiotext.repository.ProjectRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.example.audiotext.service.TextVersionSelector;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Files;
@@ -29,7 +30,7 @@ public class ProcessingService {
         p.setRawText(t.getRawText()); p.setDurationSeconds(duration); t.setDurationSeconds(duration); repo.saveSegments(id, t.getSegments()); repo.update(p);
 
         p.setStatus(ProjectStatus.POST_PROCESSING); repo.update(p); var pr=pp.process(p.getRawText(), t.getWords()); p.setProcessedText(pr.getProcessedText()); repo.update(p);
-        p.setStatus(ProjectStatus.ANALYZING); repo.update(p); p.setAnalysisResult(an.analyze(p.getProcessedText(),t)); repo.updateAnalysis(id,p.getAnalysisResult());
+        p.setStatus(ProjectStatus.ANALYZING); repo.update(p); p.setAnalysisResult(an.analyze(TextVersionSelector.bestTextForAnalysis(p),t)); repo.updateAnalysis(id,p.getAnalysisResult());
         p.setStatus(ProjectStatus.READY); repo.update(p);
     }catch(Exception e){ log.error("Processing failed for project {}", id, e); p.setStatus(ProjectStatus.ERROR); p.setErrorMessage(e.getMessage()); repo.update(p);} }
 }

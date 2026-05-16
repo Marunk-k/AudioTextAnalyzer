@@ -3,6 +3,7 @@ package com.example.audiotext.controller;
 import com.example.audiotext.repository.ProjectRepository;
 import com.example.audiotext.service.GigaChatService;
 import com.example.audiotext.service.TextAnalysisService;
+import com.example.audiotext.service.TextVersionSelector;
 import com.example.audiotext.model.TranscriptionResult;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,10 @@ public class AnalysisController {
     @PostMapping("/projects/{id}/text/ai-improve")
     public String aiImprove(@PathVariable Long id, RedirectAttributes redirectAttributes){
         var p=repo.findById(id).orElseThrow();
-        String base=(p.getProcessedText()!=null && !p.getProcessedText().isBlank())?p.getProcessedText():p.getRawText();
+        // AI-постобработка использует processedText как очищенный черновик.
+        // TextPostProcessingService не должен агрессивно расставлять пунктуацию,
+        // чтобы не передавать AI уже повреждённую структуру.
+        String base = TextVersionSelector.hasText(p.getProcessedText()) ? p.getProcessedText() : p.getRawText();
         if(base==null || base.isBlank()){
             redirectAttributes.addFlashAttribute("warning", "Нет текста для AI-постобработки.");
             return "redirect:/projects/"+id;
@@ -27,7 +31,7 @@ public class AnalysisController {
             p.setAiText(aiText);
             var analysisContext = new TranscriptionResult();
             analysisContext.setDurationSeconds(p.getDurationSeconds() != null ? p.getDurationSeconds() : 0);
-            var analysisResult = analysis.analyze(aiText, analysisContext);
+            var analysisResult = analysis.analyze(TextVersionSelector.bestTextForAnalysis(p), analysisContext);
             analysisResult.algorithmicSummary = ai.summarizeText(aiText);
             p.setAnalysisResult(analysisResult);
             repo.update(p);

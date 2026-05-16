@@ -29,7 +29,12 @@ public class ExportService {
 
     public Path exportToTxt(Project p){
         try{ Path out=storage.getExportPath(p.getId(), ExportFormat.TXT);
-            String body="Проект: "+p.getTitle()+"\nФайл: "+p.getOriginalFileName()+"\n\n"+(p.getProcessedText()==null?"":p.getProcessedText())+"\n\nAI:\n"+(p.getAiText()==null?"":p.getAiText());
+            String mainText = TextVersionSelector.bestTextForExport(p);
+            String body="Проект: "+p.getTitle()+"\nФайл: "+p.getOriginalFileName()+"\n\nГлавный текст:\n"+nullToEmpty(mainText)+
+                    "\n\nИсходная транскрибация:\n"+nullToEmpty(p.getRawText())+
+                    "\n\nАлгоритмическая предобработка:\n"+nullToEmpty(p.getProcessedText())+
+                    "\n\nAI-постобработка:\n"+nullToEmpty(p.getAiText())+
+                    "\n\nКраткое содержание:\n"+(p.getAnalysisResult()==null?"":nullToEmpty(p.getAnalysisResult().algorithmicSummary));
             Files.writeString(out, body, StandardCharsets.UTF_8); return out; }catch(Exception e){throw new RuntimeException("Ошибка экспорта TXT",e);} }
 
     public Path exportToJson(Project p){
@@ -46,8 +51,10 @@ public class ExportService {
             try (XWPFDocument doc = new XWPFDocument(); OutputStream os = Files.newOutputStream(out)) {
                 XWPFParagraph h = doc.createParagraph(); h.createRun().setText("AudioText Analyzer — " + p.getTitle());
                 XWPFParagraph meta = doc.createParagraph(); meta.createRun().setText("Файл: " + p.getOriginalFileName());
-                XWPFParagraph text = doc.createParagraph(); text.createRun().setText(nullToEmpty(p.getProcessedText()));
-                if (p.getAiText()!=null && !p.getAiText().isBlank()) { XWPFParagraph ai = doc.createParagraph(); ai.createRun().setText("AI версия: " + p.getAiText()); }
+                XWPFParagraph text = doc.createParagraph(); text.createRun().setText("Главный текст: " + nullToEmpty(TextVersionSelector.bestTextForExport(p)));
+                XWPFParagraph raw = doc.createParagraph(); raw.createRun().setText("Исходная транскрибация: " + nullToEmpty(p.getRawText()));
+                XWPFParagraph processed = doc.createParagraph(); processed.createRun().setText("Алгоритмическая предобработка: " + nullToEmpty(p.getProcessedText()));
+                XWPFParagraph ai = doc.createParagraph(); ai.createRun().setText("AI-постобработка: " + nullToEmpty(p.getAiText()));
                 doc.write(os);
             }
             return out;
@@ -62,7 +69,7 @@ public class ExportService {
                     cs.beginText(); cs.setFont(font,12); cs.newLineAtOffset(50,750);
                     cs.showText("AudioText Analyzer: "+nullToEmpty(p.getTitle())); cs.newLineAtOffset(0,-18);
                     cs.showText("Файл: "+nullToEmpty(p.getOriginalFileName())); cs.newLineAtOffset(0,-18);
-                    cs.showText(trimLen(p.getProcessedText(),120)); cs.endText();
+                    cs.showText(trimLen(TextVersionSelector.bestTextForExport(p),120)); cs.endText();
                 }
                 doc.save(out.toFile());
             }

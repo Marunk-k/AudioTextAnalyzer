@@ -4,6 +4,7 @@ import com.example.audiotext.model.TranscriptionResult;
 import com.example.audiotext.repository.ProjectRepository;
 import com.example.audiotext.service.TextAnalysisService;
 import com.example.audiotext.service.TextPostProcessingService;
+import com.example.audiotext.service.TextVersionSelector;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,7 +28,7 @@ public class TextController {
         p.setProcessedText(processedText);
         var analysisContext = new TranscriptionResult();
         analysisContext.setDurationSeconds(p.getDurationSeconds() != null ? p.getDurationSeconds() : 0);
-        p.setAnalysisResult(analysis.analyze(processedText, analysisContext));
+        p.setAnalysisResult(analysis.analyze(TextVersionSelector.bestTextForAnalysis(p), analysisContext));
         repo.update(p);
         repo.updateAnalysis(id, p.getAnalysisResult());
         return "redirect:/projects/" + id;
@@ -39,7 +40,7 @@ public class TextController {
         p.setProcessedText(post.process(p.getRawText(), java.util.List.of()).getProcessedText());
         var analysisContext = new TranscriptionResult();
         analysisContext.setDurationSeconds(p.getDurationSeconds() != null ? p.getDurationSeconds() : 0);
-        p.setAnalysisResult(analysis.analyze(p.getProcessedText(), analysisContext));
+        p.setAnalysisResult(analysis.analyze(TextVersionSelector.bestTextForAnalysis(p), analysisContext));
         repo.update(p);
         repo.updateAnalysis(id, p.getAnalysisResult());
         return "redirect:/projects/" + id;

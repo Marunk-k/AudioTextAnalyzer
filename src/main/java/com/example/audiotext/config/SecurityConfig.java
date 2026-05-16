@@ -19,6 +19,7 @@ public class SecurityConfig {
         JdbcUserDetailsManager users = new JdbcUserDetailsManager(dataSource);
         users.setUsersByUsernameQuery("select username, password, enabled from users where username = ?");
         users.setAuthoritiesByUsernameQuery("select username, authority from authorities where username = ?");
+        users.setCreateUserSql("insert into users (username, password, enabled) values (?,?, case when ? then 1 else 0 end)");
         return users;
     }
 

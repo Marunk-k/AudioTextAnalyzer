@@ -1,149 +1,186 @@
 package com.example.audiotext.service;
 
+import chat.giga.client.GigaChatClient;
+import chat.giga.client.auth.AuthClient;
+import chat.giga.client.auth.AuthClientBuilder.OAuthBuilder;
+import chat.giga.http.client.HttpClientException;
+import chat.giga.model.Scope;
+import chat.giga.model.completion.ChatMessage;
+import chat.giga.model.completion.ChatMessageRole;
+import chat.giga.model.completion.CompletionRequest;
+import chat.giga.model.completion.CompletionResponse;
 import com.example.audiotext.config.AppProperties;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
-import org.springframework.web.client.RestClient;
-
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class RealGigaChatService implements GigaChatService {
+
     private static final Logger log = LoggerFactory.getLogger(RealGigaChatService.class);
     private static final String AI_UNAVAILABLE = "AI-постобработка временно недоступна. Попробуйте позже.";
+
     private final AppProperties.Giga props;
-    private final RestClient oauthClient;
-    private final RestClient chatClient;
+    private final GigaChatClient client;
 
     public RealGigaChatService(AppProperties.Giga props) {
         this.props = props;
-        this.oauthClient = RestClient.builder().baseUrl("https://ngw.devices.sberbank.ru:9443").build();
-        this.chatClient = RestClient.builder().baseUrl("https://gigachat.devices.sberbank.ru").build();
+
+        if (props.getCredentials() == null || props.getCredentials().isBlank()) {
+            throw new IllegalArgumentException("GigaChat credentials are empty");
+        }
+
+        this.client = GigaChatClient.builder()
+                .verifySslCerts(props.isVerifySslCerts())
+                .authClient(AuthClient.builder()
+                        .withOAuth(OAuthBuilder.builder()
+                                .scope(resolveScope(props.getScope()))
+                                .authKey(props.getCredentials().trim())
+                                .build())
+                        .build())
+                .build();
+
+        log.info(
+                "RealGigaChatService initialized: model={}, scope={}, verifySslCerts={}",
+                props.getModel(),
+                props.getScope(),
+                props.isVerifySslCerts()
+        );
     }
 
     @Override
     public String improveText(String text) {
-        if (text == null || text.isBlank()) return "";
-        return ask(buildImprovePrompt(text), "improveText", text.length());
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+
+        String prompt = buildImprovePrompt(text);
+        return ask(prompt, "improveText", text.length());
     }
 
     @Override
     public String summarizeText(String text) {
-        if (text == null || text.isBlank()) return "";
-        return ask(buildSummaryPrompt(text), "summarizeText", text.length());
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+
+        String prompt = buildSummaryPrompt(text);
+        return ask(prompt, "summarizeText", text.length());
     }
 
     private String ask(String prompt, String operation, int inputLength) {
-        log.info("GigaChat {} started: model={}, inputLength={}", operation, props.getModel(), inputLength);
+        log.info(
+                "GigaChat {} started: model={}, inputLength={}",
+                operation,
+                props.getModel(),
+                inputLength
+        );
+
         try {
-            String accessToken = obtainAccessToken();
-            ChatResponse response = chatClient.post()
-                    .uri("/api/v1/chat/completions")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .body(Map.of(
-                            "model", props.getModel(),
-                            "messages", List.of(Map.of("role", "user", "content", prompt)),
-                            "temperature", 0.1,
-                            "stream", false
-                    ))
-                    .retrieve()
-                    .body(ChatResponse.class);
+            CompletionResponse response = client.completions(CompletionRequest.builder()
+                    .model(resolveModelName())
+                    .message(ChatMessage.builder()
+                            .role(ChatMessageRole.USER)
+                            .content(prompt)
+                            .build())
+                    .temperature(0.1f)
+                    .build());
 
-            String answer = extractResponseContent(response);
+            String answer = extractAnswer(response);
+
             if (answer == null || answer.isBlank()) {
-                throw new IllegalStateException("GigaChat вернул пустой ответ");
+                throw new IllegalStateException("GigaChat returned empty response");
             }
-            log.info("GigaChat {} completed: model={}, outputLength={}", operation, props.getModel(), answer.length());
+
+            log.info(
+                    "GigaChat {} completed: model={}, outputLength={}",
+                    operation,
+                    props.getModel(),
+                    answer.length()
+            );
+
             return answer.trim();
+
+        } catch (HttpClientException ex) {
+            log.error(
+                    "GigaChat {} HTTP error: status={}, body={}",
+                    operation,
+                    ex.statusCode(),
+                    safeBody(ex.bodyAsString())
+            );
+            throw new RuntimeException(AI_UNAVAILABLE, ex);
+
         } catch (Exception ex) {
-            log.error("GigaChat {} failed: {}", operation, ex.getMessage());
-            throw new RuntimeException(AI_UNAVAILABLE);
+            log.error("GigaChat {} failed: {}", operation, ex.getMessage(), ex);
+            throw new RuntimeException(AI_UNAVAILABLE, ex);
         }
     }
 
-    private String obtainAccessToken() {
-        TokenResponse tokenResponse = oauthClient.post()
-                .uri("/api/v2/oauth")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Basic " + props.getCredentials().trim())
-                .header("RqUID", UUID.randomUUID().toString())
-                .body("scope=" + props.getScope())
-                .retrieve()
-                .body(TokenResponse.class);
-        if (tokenResponse == null || tokenResponse.accessToken == null || tokenResponse.accessToken.isBlank()) {
-            throw new IllegalStateException("Не удалось получить access token");
+    private String extractAnswer(CompletionResponse response) {
+        if (response == null || response.choices() == null || response.choices().isEmpty()) {
+            return null;
         }
-        return tokenResponse.accessToken;
+
+        var choice = response.choices().get(0);
+
+        if (choice == null || choice.message() == null) {
+            return null;
+        }
+
+        return choice.message().content();
     }
 
-    private String extractResponseContent(ChatResponse response) {
-        if (response == null || response.choices == null || response.choices.isEmpty()) return null;
-        Message message = response.choices.get(0).message;
-        return message != null ? message.content : null;
+    private Scope resolveScope(String value) {
+        if (value == null || value.isBlank()) {
+            return Scope.GIGACHAT_API_PERS;
+        }
+
+        try {
+            return Scope.valueOf(value.trim());
+        } catch (IllegalArgumentException ex) {
+            log.warn("Unknown GigaChat scope '{}', fallback to GIGACHAT_API_PERS", value);
+            return Scope.GIGACHAT_API_PERS;
+        }
     }
 
-    private String buildImprovePrompt(String text){ return """
-Ты получаешь текст после автоматической транскрибации и локальной предобработки.
-Твоя задача — выполнить аккуратную корректуру, а не пересказ.
+    private String resolveModelName() {
+        if (props.getModel() == null || props.getModel().isBlank()) {
+            return "GigaChat";
+        }
 
-Что нужно сделать:
-1. Восстановить знаки препинания.
-2. Исправить грамматику и очевидные ошибки распознавания, если исправление однозначно по контексту.
-3. Разбить текст на понятные предложения и абзацы.
-4. Сохранить исходный смысл и порядок событий.
-5. Сохранить все важные детали.
-6. Сохранить вступление и финальные обращения автора, если они есть.
-7. Не добавлять новых событий, объяснений и образов.
-8. Не сокращать текст.
-9. Не делать литературную адаптацию.
-10. Не превращать текст в краткий пересказ.
+        return props.getModel().trim();
+    }
 
-Важно:
-- Не добавляй факты, которых нет в исходном тексте.
-- Не удаляй финальные фразы вроде "спасибо за прослушивание", "подписывайтесь", "всем пока".
-- Верни только исправленный текст без комментариев.
+    private String safeBody(String body) {
+        if (body == null) {
+            return "";
+        }
 
-Текст:
-%s
-""".formatted(text); }
+        return body.length() > 1500 ? body.substring(0, 1500) + "..." : body;
+    }
 
-    private String buildSummaryPrompt(String text){ return """
-Ты получаешь текст после AI-постобработки.
-Составь краткое содержание в 3–5 предложениях.
+    private String buildImprovePrompt(String text) {
+        return """
+                Ты получаешь текст, автоматически распознанный из аудио.
+                Исправь пунктуацию, грамматику и структуру текста.
+                Разбей текст на понятные абзацы.
+                Не добавляй новых фактов.
+                Не меняй смысл.
+                Сохрани исходный порядок мыслей.
+                Верни только исправленный текст без пояснений.
 
-Требования:
-1. Не добавляй факты, которых нет в тексте.
-2. Сохраняй причинно-следственную связь событий.
-3. Если в тексте есть сюжетный поворот, обязательно отрази его.
-4. Не пересказывай рекламное вступление и финальные призывы подписаться, если они не относятся к основному содержанию.
-5. Не делай выводы за пределами текста.
-6. Не искажай субъект действия.
+                Текст:
+                %s
+                """.formatted(text);
+    }
 
-Важно:
-Если герой видит, представляет, вспоминает, засыпает или ошибочно воспринимает событие, не описывай это как объективный факт.
+    private String buildSummaryPrompt(String text) {
+        return """
+                Составь краткое содержание текста в 5–7 предложениях.
+                Не добавляй новых фактов.
+                Сохрани только основные мысли.
+                Верни только краткое содержание без пояснений.
 
-Верни только краткое содержание без пояснений.
-
-Текст:
-%s
-""".formatted(text); }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private static class TokenResponse { @JsonProperty("access_token") public String accessToken; }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private static class ChatResponse { public List<Choice> choices; }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private static class Choice { public Message message; }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private static class Message { public String content; }
+                Текст:
+                %s
+                """.formatted(text);
+    }
 }

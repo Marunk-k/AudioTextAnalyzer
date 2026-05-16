@@ -19,7 +19,7 @@ app:
     model-path: models/vosk-model-small-ru
     sample-rate: 16000
   gigachat:
-    enabled: false
+    enabled: true
     credentials: ${GIGACHAT_CREDENTIALS:}
     scope: ${GIGACHAT_SCOPE:GIGACHAT_API_PERS}
     model: ${GIGACHAT_MODEL:GigaChat}

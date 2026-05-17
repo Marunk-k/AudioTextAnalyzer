@@ -31,3 +31,4 @@ function pollStatus(projectId){
     if(processingText){processingText.textContent=STATUS_LABELS[status]||status;}
   });},3000);
 }
+function copyText(id){const el=document.getElementById(id);if(!el)return;const t=el.value||el.textContent||'';if(navigator.clipboard){navigator.clipboard.writeText(t);}else{el.select();document.execCommand('copy');}}

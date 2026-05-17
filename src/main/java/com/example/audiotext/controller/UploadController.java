@@ -5,6 +5,8 @@ import com.example.audiotext.model.Project;
 import com.example.audiotext.model.ProjectStatus;
 import com.example.audiotext.repository.ProjectRepository;
 import com.example.audiotext.service.StorageService;
+import com.example.audiotext.service.CurrentUserService;
+import com.example.audiotext.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -22,11 +24,15 @@ public class UploadController {
     private final StorageService storage;
     private final ProjectRepository repo;
     private final AppProperties props;
+    private final CurrentUserService currentUserService;
+    private final UserRepository userRepository;
 
-    public UploadController(StorageService storage, ProjectRepository repo, AppProperties props) {
+    public UploadController(StorageService storage, ProjectRepository repo, AppProperties props, CurrentUserService currentUserService, UserRepository userRepository) {
         this.storage = storage;
         this.repo = repo;
         this.props = props;
+        this.currentUserService=currentUserService;
+        this.userRepository=userRepository;
     }
 
     @GetMapping("/upload")
@@ -67,6 +73,7 @@ public class UploadController {
             p.setOriginalFileName(originalName);
             p.setOriginalFilePath(path.toString());
             p.setStatus(ProjectStatus.UPLOADED);
+            p.setUserId(userRepository.findIdByLogin(currentUserService.username()));
             p = repo.save(p);
             return "redirect:/projects/" + p.getId();
         } catch (Exception ex) {

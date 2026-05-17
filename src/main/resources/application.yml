@@ -13,6 +13,10 @@ spring:
 
 app:
   temp-dir: data/temp
+  storage:
+    upload-dir: data/uploads
+    converted-dir: data/converted
+    export-dir: data/exports
   audio:
     ffmpeg-path: ffmpeg
     allowed-extensions: [wav, mp3, m4a, ogg, flac]

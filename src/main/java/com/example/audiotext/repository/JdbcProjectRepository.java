@@ -26,5 +26,27 @@ public class JdbcProjectRepository implements ProjectRepository {
     private Project hydrate(Project p){ p.setAnalysisResult(loadAnalysis(p.getId())); return p; }
     private String baseSql(){ return "select p.*,u.login as owner_login,pt.raw_text,pt.processed_text,pt.ai_text,pt.manual_text from projects p join users u on u.id=p.user_id left join project_texts pt on pt.project_id=p.id"; }
     private Project map(ResultSet rs,int n)throws SQLException{ Project p=new Project(); p.setId(rs.getLong("id")); p.setUserId(rs.getLong("user_id")); p.setOwnerLogin(rs.getString("owner_login")); p.setTitle(rs.getString("title")); p.setOriginalFileName(rs.getString("original_file_name")); p.setStatus(ProjectStatus.valueOf(rs.getString("status"))); p.setRawText(rs.getString("raw_text")); p.setProcessedText(rs.getString("processed_text")); p.setAiText(rs.getString("ai_text")); p.setManualText(rs.getString("manual_text")); p.setErrorMessage(rs.getString("error_message")); p.setDurationSeconds(rs.getDouble("duration_seconds")); p.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime()); p.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime()); return p; }
-    private TextAnalysisResult loadAnalysis(Long projectId){ try{ var list=jdbc.query("select * from analysis_results where project_id=? order by id desc limit 1",(rs,n)->{ TextAnalysisResult r=new TextAnalysisResult(); r.wordCount=rs.getInt("word_count"); r.sentenceCount=rs.getInt("sentence_count"); r.paragraphCount=rs.getInt("paragraph_count"); r.uniqueWordCount=rs.getInt("unique_word_count"); r.averageSentenceLength=rs.getDouble("average_sentence_length"); r.wordsPerMinute=rs.getDouble("words_per_minute"); r.keywordFrequency=mapper.readValue(rs.getString("keywords_json"),LinkedHashMap.class); r.fillerWordFrequency=mapper.readValue(rs.getString("filler_words_json"),LinkedHashMap.class); r.algorithmicSummary=rs.getString("summary"); return r;},projectId); return list.isEmpty()?null:list.get(0);}catch(Exception e){return null;} }
+    private TextAnalysisResult loadAnalysis(Long projectId){
+        try{
+            var list=jdbc.query("select * from analysis_results where project_id=? order by id desc limit 1",(rs,n)->{
+                TextAnalysisResult r=new TextAnalysisResult();
+                r.wordCount=rs.getInt("word_count");
+                r.sentenceCount=rs.getInt("sentence_count");
+                r.paragraphCount=rs.getInt("paragraph_count");
+                r.uniqueWordCount=rs.getInt("unique_word_count");
+                r.averageSentenceLength=rs.getDouble("average_sentence_length");
+                r.wordsPerMinute=rs.getDouble("words_per_minute");
+                try {
+                    r.keywordFrequency=mapper.readValue(rs.getString("keywords_json"),LinkedHashMap.class);
+                    r.fillerWordFrequency=mapper.readValue(rs.getString("filler_words_json"),LinkedHashMap.class);
+                } catch (Exception ex) {
+                    r.keywordFrequency=new LinkedHashMap<>();
+                    r.fillerWordFrequency=new LinkedHashMap<>();
+                }
+                r.algorithmicSummary=rs.getString("summary");
+                return r;
+            },projectId);
+            return list.isEmpty()?null:list.get(0);
+        }catch(Exception e){return null;}
+    }
 }

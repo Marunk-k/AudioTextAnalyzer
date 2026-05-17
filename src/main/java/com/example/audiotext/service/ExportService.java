@@ -76,16 +76,6 @@ public class ExportService {
             return out;
         } catch (IOException e){ throw new RuntimeException("Ошибка экспорта PDF", e);} }
 
-    public Path exportToSrt(Project p){
-        try{ Path out=storage.getExportPath(p.getId(), ExportFormat.SRT);
-            StringBuilder sb=new StringBuilder(); int idx=1;
-            for(var seg: p.getSegments()){
-                sb.append(idx++).append("\n"); sb.append(toSrt(seg.getStart())).append(" --> ").append(toSrt(seg.getEnd())).append("\n"); sb.append(seg.getText()==null?"":seg.getText()).append("\n\n");
-            }
-            if(sb.length()==0) throw new IllegalStateException("Сегменты недоступны для SRT экспорта");
-            Files.writeString(out,sb.toString(),StandardCharsets.UTF_8); return out;
-        }catch(Exception e){ throw new RuntimeException("Ошибка экспорта SRT",e);} }
-
     private PDFont loadPdfFont(PDDocument doc) throws IOException {
         try { return PDType0Font.load(doc, new ClassPathResource("fonts/DejaVuSans.ttf").getInputStream()); }
         catch (Exception ex) { throw new IOException("Для PDF с кириллицей добавьте fonts/DejaVuSans.ttf в resources/fonts.", ex); }

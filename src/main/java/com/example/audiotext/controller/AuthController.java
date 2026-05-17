@@ -15,12 +15,12 @@ public class AuthController {
     private final JdbcTemplate jdbc; private final PasswordEncoder passwordEncoder;
     public AuthController(JdbcTemplate jdbc, PasswordEncoder passwordEncoder){this.jdbc=jdbc;this.passwordEncoder=passwordEncoder;}
     @GetMapping("/login") public String loginPage(){return "login";} @GetMapping("/register") public String registerPage(){return "register";}
-    @PostMapping("/register") public String register(@RequestParam String username,@RequestParam String password,@RequestParam String passwordRepeat,RedirectAttributes redirectAttributes,Model model){
-        if (!StringUtils.hasText(username)||!StringUtils.hasText(password)){model.addAttribute("error","Логин и пароль обязательны.");return "register";}
-        if (!password.equals(passwordRepeat)){model.addAttribute("error","Пароли не совпадают.");return "register";}
-        Integer c = jdbc.queryForObject("select count(*) from users where login=?", Integer.class, username);
+    @PostMapping("/register") public String register(@RequestParam String login,@RequestParam String password,@RequestParam String confirmPassword,RedirectAttributes redirectAttributes,Model model){
+        if (!StringUtils.hasText(login)||!StringUtils.hasText(password)){model.addAttribute("error","Логин и пароль обязательны.");return "register";}
+        if (!password.equals(confirmPassword)){model.addAttribute("error","Пароли не совпадают.");return "register";}
+        Integer c = jdbc.queryForObject("select count(*) from users where login=?", Integer.class, login);
         if (c!=null && c>0){model.addAttribute("error","Пользователь с таким логином уже существует.");return "register";}
-        jdbc.update("insert into users(login,password_hash,created_at) values(?,?,?)",username,passwordEncoder.encode(password), LocalDateTime.now());
-        redirectAttributes.addFlashAttribute("success", "Регистрация выполнена. Теперь войдите в систему."); return "redirect:/login";
+        jdbc.update("insert into users(login,password_hash,created_at) values(?,?,?)",login,passwordEncoder.encode(password), LocalDateTime.now());
+        redirectAttributes.addFlashAttribute("success", "Регистрация выполнена. Теперь войдите в систему."); return "redirect:/login?registered";
     }
 }

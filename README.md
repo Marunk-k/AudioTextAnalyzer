@@ -39,6 +39,15 @@ mvn spring-boot:run
 docker compose down
 ```
 
+Если база осталась от старой схемы/SQLite-конфигурации:
+```bash
+docker compose down -v
+docker compose up -d
+```
+
+SQLite больше не используется: приложение работает только с PostgreSQL.
+
+
 Приложение: http://localhost:8080
 
 ## Переменные GigaChat

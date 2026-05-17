@@ -42,10 +42,9 @@ create table if not exists analysis_results (
 );
 create table if not exists dictionaries (
   id bigserial primary key,
-  user_id bigint references users(id) on delete cascade,
+  user_id bigint not null references users(id) on delete cascade,
   name varchar(255) not null,
   type varchar(50) not null,
-  is_system boolean not null default false,
   created_at timestamp not null
 );
 create table if not exists dictionary_entries (

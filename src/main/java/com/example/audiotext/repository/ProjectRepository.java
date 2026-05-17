@@ -8,8 +8,8 @@ public interface ProjectRepository {
     Project save(Project p);
     Optional<Project> findById(Long id);
     Optional<Project> findByIdAndOwner(Long id, String login);
-    List<Project> findAll();
     List<Project> findAllByOwner(String login);
+    List<Project> findRecentByOwner(String login, int limit);
     void update(Project p);
     void updateStatus(Long id, ProjectStatus status);
     void updateAnalysis(Long projectId, TextAnalysisResult result);

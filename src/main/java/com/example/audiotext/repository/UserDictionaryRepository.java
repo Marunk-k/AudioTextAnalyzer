@@ -29,7 +29,7 @@ public class UserDictionaryRepository {
         var ids = jdbc.queryForList("select d.id from dictionaries d join users u on u.id=d.user_id where u.login=? and d.type='FILLER_WORDS' limit 1", Long.class, login);
         if(!ids.isEmpty()) return ids.get(0);
         Long userId = jdbc.queryForObject("select id from users where login=?", Long.class, login);
-        jdbc.update("insert into dictionaries(user_id,name,type,is_system,created_at) values(?,?,'FILLER_WORDS',false,?)", userId, "Мои слова-паразиты", LocalDateTime.now());
+        jdbc.update("insert into dictionaries(user_id,name,type,created_at) values(?,?,'FILLER_WORDS',?)", userId, "Мои слова-паразиты", LocalDateTime.now());
         return jdbc.queryForObject("select d.id from dictionaries d where d.user_id=? and d.type='FILLER_WORDS' order by d.id desc limit 1", Long.class, userId);
     }
 }

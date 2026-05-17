@@ -4,6 +4,7 @@ import com.example.audiotext.config.AppProperties;
 import com.example.audiotext.model.TextAnalysisResult;
 import com.example.audiotext.model.TranscriptionResult;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -17,8 +18,13 @@ public class TextAnalysisService {
     private final Set<String> fillerWords = loadWords("config/filler_words_ru.txt", Set.of("ну", "эээ", "как бы"));
     private final double lowConfidenceThreshold;
 
-    public TextAnalysisService(com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository) { this.userDictionaryRepository=userDictionaryRepository; this.lowConfidenceThreshold = 0.6; }
-    public TextAnalysisService(AppProperties properties, com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository) { this.userDictionaryRepository=userDictionaryRepository; this.lowConfidenceThreshold = properties.getProcessing().getLowConfidenceThreshold(); }
+    public TextAnalysisService() { this.userDictionaryRepository = null; this.lowConfidenceThreshold = 0.6; }
+
+    @Autowired
+    public TextAnalysisService(AppProperties properties, com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository) {
+        this.userDictionaryRepository=userDictionaryRepository;
+        this.lowConfidenceThreshold = properties.getProcessing().getLowConfidenceThreshold();
+    }
 
     public TextAnalysisResult analyze(String text, TranscriptionResult tr) { return analyze(text,tr,null); }
     public TextAnalysisResult analyze(String text, TranscriptionResult tr, String username) {
@@ -42,7 +48,7 @@ public class TextAnalysisService {
         }
 
         java.util.Set<String> allFillers = new java.util.HashSet<>(fillerWords);
-        if (username != null) allFillers.addAll(userDictionaryRepository.findEnabledValuesByUserLogin(username).stream().map(v->v.toLowerCase(java.util.Locale.ROOT)).toList());
+        if (username != null && userDictionaryRepository != null) allFillers.addAll(userDictionaryRepository.findEnabledValuesByUserLogin(username).stream().map(v->v.toLowerCase(java.util.Locale.ROOT)).toList());
         Map<String, Integer> keywords = new HashMap<>();
         Map<String, Integer> fillers = new HashMap<>();
         for (int i = 0; i < words.length; i++) {

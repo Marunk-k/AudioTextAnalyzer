@@ -5,12 +5,14 @@ spring:
     multipart:
       max-file-size: 200MB
       max-request-size: 200MB
+  datasource:
+    url: jdbc:postgresql://localhost:5432/audiotext_analyzer
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
 app:
-  storage:
-    upload-dir: data/uploads
-    converted-dir: data/converted
-    export-dir: data/exports
-    database-path: data/db/audiotext.db
+  temp-dir: data/temp
   audio:
     ffmpeg-path: ffmpeg
     allowed-extensions: [wav, mp3, m4a, ogg, flac]
@@ -28,6 +30,3 @@ app:
   processing:
     use-mock-transcription-if-vosk-unavailable: true
     low-confidence-threshold: 0.6
-    filler-words-path: classpath:config/filler_words_ru.txt
-    stop-words-path: classpath:config/stop_words_ru.txt
-    term-dictionary-path: classpath:config/term_dictionary.json

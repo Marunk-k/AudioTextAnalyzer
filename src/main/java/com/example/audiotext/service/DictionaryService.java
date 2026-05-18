@@ -41,9 +41,9 @@ public class DictionaryService {
 
     public Map<String, String> getEffectiveDictionaryForCurrentUser(Map<String, String> baseDictionary) {
         Map<String, String> merged = new LinkedHashMap<>(baseDictionary);
+        merged.putAll(getSystemDictionary());
         String username = currentUsername();
         if (username != null) merged.putAll(getUserDictionary(username));
-        merged.putAll(getSystemDictionary());
         return merged;
     }
 

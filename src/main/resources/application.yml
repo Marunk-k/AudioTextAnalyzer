@@ -1,6 +1,9 @@
 spring:
   application:
     name: audiotext-analyzer
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:${app.storage.database-path}
   servlet:
     multipart:
       max-file-size: 200MB

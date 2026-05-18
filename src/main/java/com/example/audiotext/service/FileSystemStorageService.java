@@ -19,9 +19,9 @@ public class FileSystemStorageService implements StorageService {
     private final String convertedDir;
     private final String exportDir;
 
-    public FileSystemStorageService(@Value("${app.storage.upload-dir}") String uploadDir,
-                                    @Value("${app.storage.converted-dir}") String convertedDir,
-                                    @Value("${app.storage.export-dir}") String exportDir) {
+    public FileSystemStorageService(@Value("${app.storage.upload-dir:data/uploads}") String uploadDir,
+                                    @Value("${app.storage.converted-dir:data/converted}") String convertedDir,
+                                    @Value("${app.storage.export-dir:data/exports}") String exportDir) {
         this.uploadDir = uploadDir;
         this.convertedDir = convertedDir;
         this.exportDir = exportDir;

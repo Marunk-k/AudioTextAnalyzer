@@ -13,7 +13,7 @@ public class DataSourceConfig {
 
     @Bean
     @Primary
-    public DataSource dataSource(@Value("${app.storage.database-path}") String databasePath) {
+    public DataSource dataSource(@Value("${app.storage.database-path:data/db/audiotext.db}") String databasePath) {
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName("org.sqlite.JDBC");
         ds.setUrl("jdbc:sqlite:" + databasePath);

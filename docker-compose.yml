@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: audiotext-postgres
+    environment:
+      POSTGRES_DB: audiotext_analyzer
+      POSTGRES_USER: audiotext_user
+      POSTGRES_PASSWORD: audiotext_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - audiotext_postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  audiotext_postgres_data:

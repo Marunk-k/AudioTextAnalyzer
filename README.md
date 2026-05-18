@@ -1,67 +1,48 @@
 # AudioText Analyzer
 
-Веб-MVP для дипломной работы: загрузка аудио, транскрибация (mock/Vosk), постобработка, анализ и экспорт.
+Java/Spring Boot приложение для загрузки аудио, распознавания речи (FFmpeg + Vosk), предобработки текста, AI-постобработки (GigaChat), анализа и экспорта (TXT/DOCX/PDF/JSON).
 
-## Что уже реализовано
-- Загрузка аудиофайла и создание проекта.
-- Сохранение проектов в SQLite (`data/db/audiotext.db`).
-- Обработка проекта (mock-транскрибация -> постобработка -> анализ).
-- Просмотр raw/processed текста.
-- Редактирование processed текста и повторная постобработка.
-- Экспорт в TXT и JSON.
-- Глобальная обработка ошибок.
+## Технологии
+- Java 17
+- Spring Boot
+- Thymeleaf
+- PostgreSQL
+- Spring JDBC
+- FFmpeg
+- Vosk
+- GigaChat
+- Apache POI
+- PDFBox
+- Jackson
+- Maven
 
-## Запуск
+## Запуск PostgreSQL в Docker
+В проекте есть `docker-compose.yml` с PostgreSQL 16.
+
+Параметры контейнера:
+- DB: `audiotext_analyzer`
+- User: `audiotext_user`
+- Password: `audiotext_password`
+- Port: `5432:5432`
+- Volume: `audiotext_postgres_data`
+
+## Настройка подключения
+`src/main/resources/application.yml` уже настроен на локальный PostgreSQL в Docker:
+- `jdbc:postgresql://localhost:5432/audiotext_analyzer`
+- `username: audiotext_user`
+- `password: audiotext_password`
+
+## Быстрый старт
 ```bash
+docker compose up -d
 mvn spring-boot:run
+docker compose down
 ```
-Открыть: http://localhost:8080
 
-## Хранилища
-- uploads: `data/uploads`
-- converted: `data/converted`
-- exports: `data/exports`
-- db: `data/db/audiotext.db`
+Приложение: http://localhost:8080
 
-## Mock-режим
-Если модель Vosk недоступна, можно демонстрировать поток через `MockTranscriptionService` и файл `src/main/resources/samples/sample_transcription.txt`.
-
-
-## Новое в текущем шаге
-- Endpoint статуса `GET /projects/{id}/status` + JS polling на странице проекта.
-- Кнопка `Улучшить через AI` с `MockGigaChatService` и сохранением `aiText`.
-
-- Экспорт расширен: DOCX и PDF (PDF в текущем MVP использует базовый ASCII-safe вывод).
-
-
-## Проверка реальной AI-постобработки
-1. Задайте переменные окружения:
-   - `GIGACHAT_CREDENTIALS=...`
-   - `GIGACHAT_SCOPE=GIGACHAT_API_PERS`
-   - `GIGACHAT_MODEL=GigaChat`
-2. В `application.yml` включите:
-   - `app.gigachat.enabled: true`
-3. Запустите приложение:
-   ```bash
-   mvn spring-boot:run
-   ```
-4. Откройте проект, где есть `processedText`.
-5. Нажмите кнопку **«Запустить AI-постобработку»**.
-6. Проверьте результат:
-   - `aiText` стал более грамотным;
-   - появились знаки препинания;
-   - текст разбит на абзацы;
-   - краткое содержание обновилось.
-
-Важно:
-- credentials нельзя коммитить в репозиторий;
-- если credentials не заданы, используется локальный fallback;
-- fallback не гарантирует качественную пунктуацию.
-
-## Логика обработки текста
-
-- `rawText` — исходная транскрибация.
-- `processedText` — алгоритмическая предобработка. Она не пытается полноценно расставлять пунктуацию, а очищает текст от повторов, слов-паразитов и исправляет термины.
-- `aiText` — финальная AI-постобработка. Она восстанавливает пунктуацию, грамматику, структуру и абзацы.
-
-Анализ и краткое содержание строятся по лучшей доступной версии текста: `aiText`, затем `processedText`, затем `rawText`.
+## Переменные GigaChat
+Для реальной AI-постобработки задайте:
+- `GIGACHAT_CREDENTIALS`
+- `GIGACHAT_SCOPE` (по умолчанию `GIGACHAT_API_PERS`)
+- `GIGACHAT_MODEL` (по умолчанию `GigaChat`)

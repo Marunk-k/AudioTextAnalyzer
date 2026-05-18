@@ -28,22 +28,12 @@ public class JdbcProjectRepository implements ProjectRepository {
     }
 
     private void init() {
-        jdbc.execute("create table if not exists projects(id integer primary key autoincrement,title text,original_file_name text,original_file_path text,converted_file_path text,status text,created_at text,updated_at text,raw_text text,processed_text text,ai_text text,error_message text,duration_seconds real)");
-        jdbc.execute("create table if not exists transcription_segments(id integer primary key autoincrement,project_id integer,start_time real,end_time real,text text,confidence real)");
-        jdbc.execute("create table if not exists analysis_results(id integer primary key autoincrement,project_id integer,word_count integer,sentence_count integer,paragraph_count integer,unique_word_count integer,average_sentence_length real,words_per_minute real,keywords_json text,filler_words_json text,algorithmic_summary text,created_at text)");
-        addColumnIfMissing("projects", "converted_file_path", "text");
+        jdbc.execute("create table if not exists projects(id bigserial primary key,title text,original_file_name text,original_file_path text,converted_file_path text,status text,created_at text,updated_at text,raw_text text,processed_text text,ai_text text,error_message text,duration_seconds double precision)");
+        jdbc.execute("create table if not exists transcription_segments(id bigserial primary key,project_id bigint,start_time double precision,end_time double precision,text text,confidence double precision)");
+        jdbc.execute("create table if not exists analysis_results(id bigserial primary key,project_id bigint,word_count integer,sentence_count integer,paragraph_count integer,unique_word_count integer,average_sentence_length double precision,words_per_minute double precision,keywords_json text,filler_words_json text,algorithmic_summary text,created_at text)");
     }
 
-    private void addColumnIfMissing(String table, String column, String type) {
-        if (!columnExists(table, column)) jdbc.execute("alter table " + table + " add column " + column + " " + type);
-    }
-
-    private boolean columnExists(String table, String column) {
-        return jdbc.query("PRAGMA table_info(" + table + ")", (rs, n) -> rs.getString("name"))
-                .stream().anyMatch(column::equalsIgnoreCase);
-    }
-
-    public Project save(Project p) { /* unchanged style compact */
+    public Project save(Project p) {
         LocalDateTime now = LocalDateTime.now();
         p.setCreatedAt(now); p.setUpdatedAt(now);
         KeyHolder kh = new GeneratedKeyHolder();

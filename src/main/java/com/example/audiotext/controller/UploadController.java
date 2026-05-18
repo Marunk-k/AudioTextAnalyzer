@@ -5,6 +5,8 @@ import com.example.audiotext.model.Project;
 import com.example.audiotext.model.ProjectStatus;
 import com.example.audiotext.repository.ProjectRepository;
 import com.example.audiotext.service.StorageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +18,7 @@ import java.util.Locale;
 
 @Controller
 public class UploadController {
+    private static final Logger log = LoggerFactory.getLogger(UploadController.class);
     private final StorageService storage;
     private final ProjectRepository repo;
     private final AppProperties props;
@@ -67,6 +70,7 @@ public class UploadController {
             p = repo.save(p);
             return "redirect:/projects/" + p.getId();
         } catch (Exception ex) {
+            log.error("Upload failed for file '{}'", originalName, ex);
             model.addAttribute("error", "Не удалось сохранить файл. Проверьте имя файла и повторите попытку.");
             return uploadPage(model);
         }

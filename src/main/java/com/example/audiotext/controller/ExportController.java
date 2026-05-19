@@ -1,6 +1,7 @@
 package com.example.audiotext.controller;
 
 import com.example.audiotext.repository.ProjectRepository;
+import com.example.audiotext.service.CurrentUserService;
 import com.example.audiotext.service.ExportService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
@@ -9,17 +10,17 @@ import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class ExportController {
-    private final ProjectRepository repo; private final ExportService export;
-    public ExportController(ProjectRepository repo, ExportService export){this.repo=repo;this.export=export;}
+    private final ProjectRepository repo; private final CurrentUserService currentUserService; private final ExportService export;
+    public ExportController(ProjectRepository repo, ExportService export, CurrentUserService currentUserService){this.repo=repo;this.export=export;this.currentUserService=currentUserService;}
 
     @GetMapping("/projects/{id}/export/txt") @ResponseBody
-    public ResponseEntity<FileSystemResource> txt(@PathVariable Long id){ var p=repo.findById(id).orElseThrow(); return file(export.exportToTxt(p),"result.txt"); }
+    public ResponseEntity<FileSystemResource> txt(@PathVariable Long id){ var p=repo.findByIdAndOwner(id, currentUserService.username()).orElseThrow(); return file(export.exportToTxt(p),"result.txt"); }
     @GetMapping("/projects/{id}/export/json") @ResponseBody
-    public ResponseEntity<FileSystemResource> json(@PathVariable Long id){ var p=repo.findById(id).orElseThrow(); return file(export.exportToJson(p),"result.json"); }
+    public ResponseEntity<FileSystemResource> json(@PathVariable Long id){ var p=repo.findByIdAndOwner(id, currentUserService.username()).orElseThrow(); return file(export.exportToJson(p),"result.json"); }
     @GetMapping("/projects/{id}/export/docx") @ResponseBody
-    public ResponseEntity<FileSystemResource> docx(@PathVariable Long id){ var p=repo.findById(id).orElseThrow(); return file(export.exportToDocx(p),"result.docx"); }
+    public ResponseEntity<FileSystemResource> docx(@PathVariable Long id){ var p=repo.findByIdAndOwner(id, currentUserService.username()).orElseThrow(); return file(export.exportToDocx(p),"result.docx"); }
     @GetMapping("/projects/{id}/export/pdf") @ResponseBody
-    public ResponseEntity<FileSystemResource> pdf(@PathVariable Long id){ var p=repo.findById(id).orElseThrow(); return file(export.exportToPdf(p),"result.pdf"); }
+    public ResponseEntity<FileSystemResource> pdf(@PathVariable Long id){ var p=repo.findByIdAndOwner(id, currentUserService.username()).orElseThrow(); return file(export.exportToPdf(p),"result.pdf"); }
     private ResponseEntity<FileSystemResource> file(java.nio.file.Path p,String name){
         var r=new FileSystemResource(p);
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename="+name).contentType(MediaType.APPLICATION_OCTET_STREAM).body(r);

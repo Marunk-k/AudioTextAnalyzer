@@ -4,6 +4,7 @@ import com.example.audiotext.config.AppProperties;
 import com.example.audiotext.model.TextAnalysisResult;
 import com.example.audiotext.model.TranscriptionResult;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -12,14 +13,21 @@ import java.util.stream.Collectors;
 
 @Service
 public class TextAnalysisService {
+    private final com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository;
     private final Set<String> stopWords = loadWords("config/stop_words_ru.txt", Set.of("и", "в", "на", "что"));
     private final Set<String> fillerWords = loadWords("config/filler_words_ru.txt", Set.of("ну", "эээ", "как бы"));
     private final double lowConfidenceThreshold;
 
-    public TextAnalysisService() { this.lowConfidenceThreshold = 0.6; }
-    public TextAnalysisService(AppProperties properties) { this.lowConfidenceThreshold = properties.getProcessing().getLowConfidenceThreshold(); }
+    public TextAnalysisService() { this.userDictionaryRepository = null; this.lowConfidenceThreshold = 0.6; }
 
-    public TextAnalysisResult analyze(String text, TranscriptionResult tr) {
+    @Autowired
+    public TextAnalysisService(AppProperties properties, com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository) {
+        this.userDictionaryRepository=userDictionaryRepository;
+        this.lowConfidenceThreshold = properties.getProcessing().getLowConfidenceThreshold();
+    }
+
+    public TextAnalysisResult analyze(String text, TranscriptionResult tr) { return analyze(text,tr,null); }
+    public TextAnalysisResult analyze(String text, TranscriptionResult tr, String username) {
         TextAnalysisResult r = new TextAnalysisResult();
         String safeText = text == null ? "" : text.trim();
         if (safeText.isBlank()) return r;
@@ -39,16 +47,18 @@ public class TextAnalysisService {
             if (tr.getWords() != null) r.lowConfidenceWords = tr.getWords().stream().filter(w -> w.getConfidence() < lowConfidenceThreshold).toList();
         }
 
+        java.util.Set<String> allFillers = new java.util.HashSet<>(fillerWords);
+        if (username != null && userDictionaryRepository != null) allFillers.addAll(userDictionaryRepository.findEnabledValuesByUserLogin(username).stream().map(v->v.toLowerCase(java.util.Locale.ROOT)).toList());
         Map<String, Integer> keywords = new HashMap<>();
         Map<String, Integer> fillers = new HashMap<>();
         for (int i = 0; i < words.length; i++) {
             String w = words[i];
             if (w.length() <= 2) continue;
-            if (fillerWords.contains(w)) fillers.merge(w, 1, Integer::sum);
-            if (!stopWords.contains(w) && !fillerWords.contains(w)) keywords.merge(w, 1, Integer::sum);
+            if (allFillers.contains(w)) fillers.merge(w, 1, Integer::sum);
+            if (!stopWords.contains(w) && !allFillers.contains(w)) keywords.merge(w, 1, Integer::sum);
             if (i < words.length - 1) {
                 String bi = w + " " + words[i + 1];
-                if (fillerWords.contains(bi)) fillers.merge(bi, 1, Integer::sum);
+                if (allFillers.contains(bi)) fillers.merge(bi, 1, Integer::sum);
             }
         }
         r.keywordFrequency = sortTop(keywords, 15);

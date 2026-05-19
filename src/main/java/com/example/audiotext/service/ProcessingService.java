@@ -15,7 +15,7 @@ public class ProcessingService {
     private static final Logger log = LoggerFactory.getLogger(ProcessingService.class);
     private final ProjectRepository repo; private final TranscriptionService tr; private final TextPostProcessingService pp; private final TextAnalysisService an; private final AudioService audio;
     public ProcessingService(ProjectRepository repo, TranscriptionService tr, TextPostProcessingService pp, TextAnalysisService an, AudioService audio){this.repo=repo;this.tr=tr;this.pp=pp;this.an=an;this.audio=audio;}
-    public void processProject(Long id){ var p=repo.findById(id).orElseThrow(); try{
+    public void processProject(Long id, String username){ var p=repo.findByIdAndOwner(id, username).orElseThrow(); try{
         p.setErrorMessage(null);
         Path source=Path.of(p.getOriginalFilePath());
         if (!Files.exists(source)) throw new IllegalStateException("Исходный файл не найден.");
@@ -29,8 +29,8 @@ public class ProcessingService {
         double duration = t.getDurationSeconds() > 0 ? t.getDurationSeconds() : (audioDuration > 0 ? audioDuration : 0);
         p.setRawText(t.getRawText()); p.setDurationSeconds(duration); t.setDurationSeconds(duration); repo.saveSegments(id, t.getSegments()); repo.update(p);
 
-        p.setStatus(ProjectStatus.POST_PROCESSING); repo.update(p); var pr=pp.process(p.getRawText(), t.getWords()); p.setProcessedText(pr.getProcessedText()); repo.update(p);
-        p.setStatus(ProjectStatus.ANALYZING); repo.update(p); p.setAnalysisResult(an.analyze(TextVersionSelector.bestTextForAnalysis(p),t)); repo.updateAnalysis(id,p.getAnalysisResult());
+        p.setStatus(ProjectStatus.POST_PROCESSING); repo.update(p); var pr=pp.process(p.getRawText(), t.getWords(), username); p.setProcessedText(pr.getProcessedText()); repo.update(p);
+        p.setStatus(ProjectStatus.ANALYZING); repo.update(p); p.setAnalysisResult(an.analyze(TextVersionSelector.bestTextForAnalysis(p),t,username)); repo.updateAnalysis(id,p.getAnalysisResult());
         p.setStatus(ProjectStatus.READY); repo.update(p);
     }catch(Exception e){ log.error("Processing failed for project {}", id, e); p.setStatus(ProjectStatus.ERROR); p.setErrorMessage(e.getMessage()); repo.update(p);} }
 }

@@ -13,12 +13,14 @@ import java.util.regex.Pattern;
 
 @Service
 public class TextPostProcessingService {
+    private final com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository;
     private final Set<String> fillers;
     private final Map<String, String> dictionary;
 
-    public TextPostProcessingService() { this.fillers = loadFillers(); this.dictionary = loadDictionary(); }
+    public TextPostProcessingService(com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository) { this.userDictionaryRepository=userDictionaryRepository; this.fillers = loadFillers(); this.dictionary = loadDictionary(); }
 
-    public PostProcessingResult process(String rawText, List<WordInfo> words) {
+    public PostProcessingResult process(String rawText, List<WordInfo> words) { return process(rawText, words, null); }
+    public PostProcessingResult process(String rawText, List<WordInfo> words, String username) {
         PostProcessingResult r = new PostProcessingResult();
         if (rawText == null || rawText.isBlank()) { r.setProcessedText(""); return r; }
 
@@ -28,7 +30,7 @@ public class TextPostProcessingService {
         // 2) Удаление повторов + 3) удаление слов-паразитов (однословных и многословных).
         List<String> tokens = new ArrayList<>(Arrays.asList(normalized.split(" ")));
         tokens = removeDuplicates(tokens, r);
-        tokens = removeFillers(tokens, r);
+        tokens = removeFillers(tokens, r, username);
 
         // 4-5) Безопасные замены терминов по границам слов.
         String text = String.join(" ", tokens);
@@ -60,7 +62,9 @@ public class TextPostProcessingService {
         return out;
     }
 
-    private List<String> removeFillers(List<String> tokens, PostProcessingResult r) {
+    private List<String> removeFillers(List<String> tokens, PostProcessingResult r, String username) {
+        java.util.Set<String> allFillers = new java.util.HashSet<>(fillers);
+        if (username != null) allFillers.addAll(userDictionaryRepository.findEnabledValuesByUserLogin(username).stream().map(v->v.toLowerCase(java.util.Locale.ROOT)).toList());
         List<String> out = new ArrayList<>();
         for (int i = 0; i < tokens.size(); i++) {
             String one = tokens.get(i).toLowerCase(Locale.ROOT);
@@ -68,9 +72,9 @@ public class TextPostProcessingService {
             String three = i + 2 < tokens.size()
                     ? (two + " " + tokens.get(i + 2).toLowerCase(Locale.ROOT))
                     : "";
-            if (!three.isBlank() && fillers.contains(three)) { r.setRemovedFillerWordsCount(r.getRemovedFillerWordsCount() + 3); i += 2; continue; }
-            if (!two.isBlank() && fillers.contains(two)) { r.setRemovedFillerWordsCount(r.getRemovedFillerWordsCount() + 2); i++; continue; }
-            if (fillers.contains(one)) { r.setRemovedFillerWordsCount(r.getRemovedFillerWordsCount() + 1); continue; }
+            if (!three.isBlank() && allFillers.contains(three)) { r.setRemovedFillerWordsCount(r.getRemovedFillerWordsCount() + 3); i += 2; continue; }
+            if (!two.isBlank() && allFillers.contains(two)) { r.setRemovedFillerWordsCount(r.getRemovedFillerWordsCount() + 2); i++; continue; }
+            if (allFillers.contains(one)) { r.setRemovedFillerWordsCount(r.getRemovedFillerWordsCount() + 1); continue; }
             out.add(tokens.get(i));
         }
         return out;

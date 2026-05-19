@@ -1,6 +1,7 @@
 package com.example.audiotext.controller;
 
 import com.example.audiotext.repository.ProjectRepository;
+import com.example.audiotext.service.CurrentUserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,38 +11,40 @@ import java.util.List;
 @Controller
 public class HomeController {
     private final ProjectRepository repo;
+    private final CurrentUserService currentUserService;
 
-    public HomeController(ProjectRepository repo) {
+    public HomeController(ProjectRepository repo, CurrentUserService currentUserService) {
         this.repo = repo;
+        this.currentUserService = currentUserService;
     }
 
-    public record FaqItem(String question, String answer) {}
+    public record HelpSection(String title, String text) {}
 
     @GetMapping("/")
     public String index(Model model) {
-        model.addAttribute("recentProjects", repo.findAll().stream().limit(3).toList());
+        if (currentUserService.isAuthenticated()) {
+            model.addAttribute("recentProjects", repo.findRecentByOwner(currentUserService.username(), 3));
+        }
         return "index";
     }
 
     @GetMapping("/workspace")
     public String workspace(Model model) {
-        model.addAttribute("recentProjects", repo.findAll().stream().limit(5).toList());
+        model.addAttribute("recentProjects", repo.findRecentByOwner(currentUserService.username(), 5));
         return "workspace";
     }
 
     @GetMapping("/help")
     public String help(Model model) {
-        model.addAttribute("faqItems", List.of(
-                new FaqItem("Какие форматы аудио поддерживаются?", "Для загрузки подходят популярные аудиоформаты, а при необходимости файл конвертируется через FFmpeg."),
-                new FaqItem("Куда нужно положить модель Vosk?", "Распакуйте модель в папку models/vosk-model-small-ru."),
-                new FaqItem("Как работает обработка текста?", "Сначала система получает исходную транскрибацию. Затем выполняется алгоритмическая предобработка: удаление повторов, слов-паразитов, исправление терминов и нормализация текста."),
-                new FaqItem("Что делает AI-постобработка?", "AI-постобработка восстанавливает пунктуацию, исправляет грамматику и делит текст на абзацы, сохраняя исходный смысл."),
-                new FaqItem("Как выполняется анализ?", "После AI-постобработки система анализирует финальный текст: считает слова и предложения, выделяет ключевые слова, оценивает скорость речи и формирует краткое содержание."),
-                new FaqItem("Какие форматы экспорта доступны?", "Доступен экспорт в TXT, DOCX, PDF и JSON."),
-                new FaqItem("Почему качество распознавания может быть разным?", "Точность зависит от качества записи, шума, дикции и используемой модели Vosk."),
-                new FaqItem("Как подготовить аудио для лучшего результата?", "Используйте чистую запись без перегруза, с минимальным фоновым шумом и чёткой речью."),
-                new FaqItem("Как подключить FFmpeg?", "Укажите путь к исполняемому файлу в параметре app.audio.ffmpeg-path."),
-                new FaqItem("Где хранятся загруженные и экспортированные файлы?", "Файлы сохраняются в локальные папки data/uploads, data/converted и data/exports.")
+        model.addAttribute("sections", List.of(
+                new HelpSection("Регистрация и вход", "Создайте аккаунт на странице регистрации, затем войдите в систему с логином и паролем."),
+                new HelpSection("Создание проекта и загрузка аудио", "Создайте проект, укажите название и загрузите аудиофайл в поддерживаемом формате."),
+                new HelpSection("Обработка аудио", "После запуска обработки сервис конвертирует аудио, распознаёт речь и формирует исходный текст."),
+                new HelpSection("AI-постобработка", "Вы можете запустить AI-улучшение текста, затем отредактировать и сохранить результат."),
+                new HelpSection("Пользовательские словари", "Раздел словарей позволяет управлять словами-паразитами, заменами терминов и пользовательскими заменами."),
+                new HelpSection("Слова-паразиты", "Добавляйте свои слова и фразы: они будут удаляться на этапе предобработки только в ваших проектах."),
+                new HelpSection("Анализ текста", "Анализ считает ключевые метрики текста и использует лучшую доступную версию: manual → ai → processed → raw."),
+                new HelpSection("Экспорт", "Готовый результат можно экспортировать в TXT, DOCX, PDF и JSON и повторно скачивать из истории экспорта.")
         ));
         return "help";
     }

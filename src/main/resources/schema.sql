@@ -9,11 +9,13 @@ create table if not exists projects (
   user_id bigint not null references users(id) on delete cascade,
   title varchar(255) not null,
   original_file_name varchar(500),
+  original_file_path varchar(1000),
   status varchar(50) not null,
   error_message text,
   duration_seconds double precision,
   created_at timestamp not null,
-  updated_at timestamp not null
+  updated_at timestamp not null,
+  unique(user_id, title)
 );
 create table if not exists audio_files (
   id bigserial primary key,
@@ -23,7 +25,8 @@ create table if not exists audio_files (
   content_type varchar(255),
   file_size bigint,
   file_data bytea not null,
-  created_at timestamp not null
+  created_at timestamp not null,
+  unique(project_id)
 );
 create table if not exists project_texts (
   id bigserial primary key,
@@ -46,7 +49,8 @@ create table if not exists dictionaries (
   name varchar(255) not null,
   type varchar(50) not null,
   is_system boolean not null default false,
-  created_at timestamp not null
+  created_at timestamp not null,
+  unique(user_id, type)
 );
 create table if not exists dictionary_entries (
   id bigserial primary key,
@@ -54,7 +58,8 @@ create table if not exists dictionary_entries (
   source_value varchar(500) not null,
   target_value varchar(500),
   enabled boolean not null default true,
-  created_at timestamp not null
+  created_at timestamp not null,
+  unique(dictionary_id, source_value)
 );
 create table if not exists export_files (
   id bigserial primary key,
@@ -64,5 +69,6 @@ create table if not exists export_files (
   content_type varchar(255) not null,
   file_size bigint not null,
   file_data bytea not null,
-  created_at timestamp not null
+  created_at timestamp not null,
+  unique(project_id, format)
 );

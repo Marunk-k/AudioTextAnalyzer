@@ -1,5 +1,5 @@
 package com.example.audiotext.controller;
-import com.example.audiotext.repository.ProjectRepository;import com.example.audiotext.service.CurrentUserService;import com.example.audiotext.service.ProcessingService;import com.example.audiotext.service.SmartTranscriptionService;import org.springframework.stereotype.Controller;import org.springframework.ui.Model;import org.springframework.web.bind.annotation.*;
+import com.example.audiotext.repository.ProjectRepository;import com.example.audiotext.service.CurrentUserService;import com.example.audiotext.service.ProcessingService;import com.example.audiotext.service.SmartTranscriptionService;import org.springframework.stereotype.Controller;import org.springframework.ui.Model;import org.springframework.web.bind.annotation.*;import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class ProjectController {
  private final ProjectRepository repo; private final ProcessingService proc; private final SmartTranscriptionService smart; private final CurrentUserService currentUserService;
@@ -7,4 +7,6 @@ public class ProjectController {
  @GetMapping("/projects") public String list(Model m){ m.addAttribute("projects",repo.findAllByOwner(currentUserService.username())); return "projects"; }
  @GetMapping("/projects/{id}") public String details(@PathVariable Long id, Model m){ m.addAttribute("project",repo.findByIdAndOwner(id,currentUserService.username()).orElseThrow()); m.addAttribute("recognitionMode", smart.currentMode()); m.addAttribute("exportFormats", java.util.List.of("txt","docx","pdf","json")); return "project-details"; }
  @PostMapping("/projects/{id}/process") public String process(@PathVariable Long id){ proc.processProject(id, currentUserService.username()); return "redirect:/projects/"+id; }
+ @PostMapping("/projects/{id}/rename") public String rename(@PathVariable Long id,@RequestParam String title, RedirectAttributes ra){ var username=currentUserService.username(); var p=repo.findByIdAndOwner(id,username).orElseThrow(); if(title==null||title.isBlank()){ra.addFlashAttribute("warning","Введите название проекта."); return "redirect:/projects/"+id;} if(repo.existsByOwnerAndTitleExcludingProject(username,title.trim(),id)){ra.addFlashAttribute("warning","Проект с таким названием уже существует."); return "redirect:/projects/"+id;} p.setTitle(title.trim()); repo.update(p); ra.addFlashAttribute("success","Проект переименован."); return "redirect:/projects/"+id; }
+ @PostMapping("/projects/{id}/delete") public String delete(@PathVariable Long id){ repo.findByIdAndOwner(id,currentUserService.username()).orElseThrow(); repo.deleteById(id); return "redirect:/projects"; }
 }

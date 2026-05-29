@@ -1,5 +1,6 @@
 package com.example.audiotext.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import com.example.audiotext.config.AppProperties;
 import com.example.audiotext.model.TextAnalysisResult;
 import com.example.audiotext.model.TranscriptionResult;
@@ -17,11 +18,14 @@ public class TextAnalysisService {
     private final Set<String> fillerWords = loadWords("config/filler_words_ru.txt", Set.of("ну", "эээ", "как бы"));
     private final double lowConfidenceThreshold;
 
+    public TextAnalysisService() { this(null); }
     public TextAnalysisService(com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository) { this.userDictionaryRepository=userDictionaryRepository; this.lowConfidenceThreshold = 0.6; }
+    @Autowired
     public TextAnalysisService(AppProperties properties, com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository) { this.userDictionaryRepository=userDictionaryRepository; this.lowConfidenceThreshold = properties.getProcessing().getLowConfidenceThreshold(); }
 
-    public TextAnalysisResult analyze(String text, TranscriptionResult tr) { return analyze(text,tr,null); }
-    public TextAnalysisResult analyze(String text, TranscriptionResult tr, String username) {
+    public TextAnalysisResult analyze(String text, TranscriptionResult tr) { return analyze(text,tr,null,null); }
+    public TextAnalysisResult analyze(String text, TranscriptionResult tr, String username) { return analyze(text,tr,username,null); }
+    public TextAnalysisResult analyze(String text, TranscriptionResult tr, String username, String rawTextForFillers) {
         TextAnalysisResult r = new TextAnalysisResult();
         String safeText = text == null ? "" : text.trim();
         if (safeText.isBlank()) return r;
@@ -42,18 +46,23 @@ public class TextAnalysisService {
         }
 
         java.util.Set<String> allFillers = new java.util.HashSet<>(fillerWords);
-        if (username != null) allFillers.addAll(userDictionaryRepository.findEnabledValuesByUserLogin(username).stream().map(v->v.toLowerCase(java.util.Locale.ROOT)).toList());
+        if (username != null && userDictionaryRepository != null) allFillers.addAll(userDictionaryRepository.findEnabledValuesByUserLogin(username).stream().map(v->v.toLowerCase(java.util.Locale.ROOT)).toList());
         Map<String, Integer> keywords = new HashMap<>();
         Map<String, Integer> fillers = new HashMap<>();
+        String[] fillerSourceWords = (rawTextForFillers == null ? safeText : rawTextForFillers).toLowerCase().replaceAll("[^а-яa-z0-9\\s-]", " ").trim().split("\\s+");
+        for (int i = 0; i < fillerSourceWords.length; i++) {
+            String w = fillerSourceWords[i];
+            if (w.length() <= 2) continue;
+            if (allFillers.contains(w)) fillers.merge(w, 1, Integer::sum);
+            if (i < fillerSourceWords.length - 1) {
+                String bi = w + " " + fillerSourceWords[i + 1];
+                if (allFillers.contains(bi)) fillers.merge(bi, 1, Integer::sum);
+            }
+        }
         for (int i = 0; i < words.length; i++) {
             String w = words[i];
             if (w.length() <= 2) continue;
-            if (allFillers.contains(w)) fillers.merge(w, 1, Integer::sum);
             if (!stopWords.contains(w) && !allFillers.contains(w)) keywords.merge(w, 1, Integer::sum);
-            if (i < words.length - 1) {
-                String bi = w + " " + words[i + 1];
-                if (allFillers.contains(bi)) fillers.merge(bi, 1, Integer::sum);
-            }
         }
         r.keywordFrequency = sortTop(keywords, 15);
         r.fillerWordFrequency = sortTop(fillers, 15);

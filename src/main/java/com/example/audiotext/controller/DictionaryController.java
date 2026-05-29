@@ -15,7 +15,7 @@ public class DictionaryController {
         this.dictionaries = dictionaries;
     }
 
-    @GetMapping({"/settings", "/dictionaries"})
+    @GetMapping("/legacy-dictionaries")
     public String settings(Model model) {
         String username = dictionaries.currentUsername();
         model.addAttribute("username", username);

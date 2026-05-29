@@ -10,10 +10,17 @@ public interface ProjectRepository {
     Optional<Project> findByIdAndOwner(Long id, String login);
     List<Project> findAll();
     List<Project> findAllByOwner(String login);
+    boolean existsByOwnerAndTitle(String login, String title);
+    boolean existsByOwnerAndTitleExcludingProject(String login, String title, Long projectId);
     void update(Project p);
     void updateStatus(Long id, ProjectStatus status);
     void updateAnalysis(Long projectId, TextAnalysisResult result);
     void saveSegments(Long projectId, List<TranscriptionSegment> segments);
     List<TranscriptionSegment> findSegmentsByProjectId(Long projectId);
+    void saveAudioFile(Long projectId, String fileName, String contentType, byte[] fileData);
+    void upsertExportFile(Long projectId, ExportFormat format, String fileName, String contentType, byte[] fileData);
+    Optional<ExportedFile> findExportFile(Long projectId, ExportFormat format);
     void deleteById(Long id);
+
+    record ExportedFile(String fileName, String contentType, byte[] fileData) {}
 }

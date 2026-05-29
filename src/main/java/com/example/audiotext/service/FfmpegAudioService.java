@@ -20,7 +20,8 @@ public class FfmpegAudioService implements AudioService {
 
     @Override
     public Path convertToWav(Path inputFile, Long projectId) {
-        String name = inputFile.getFileName().toString().toLowerCase(); Path out = storage.getConvertedPath(projectId);
+        Path out = storage.getConvertedPath(projectId);
+        try { java.nio.file.Files.createDirectories(out.getParent()); } catch (IOException e) { throw new IllegalStateException("Не удалось подготовить временный каталог для WAV", e); }
         List<String> cmd = List.of(props.getAudio().getFfmpegPath(), "-y", "-i", inputFile.toString(), "-ac", "1", "-ar", "16000", "-sample_fmt", "s16", out.toString());
         try {
             Process p = new ProcessBuilder(cmd).start();
@@ -29,8 +30,7 @@ public class FfmpegAudioService implements AudioService {
             if (code != 0) throw new IllegalStateException("Ошибка конвертации FFmpeg: " + stderr);
             return out;
         } catch (IOException e) {
-            if (name.endsWith(".wav")) return inputFile;
-            throw new IllegalStateException("FFmpeg не найден. Для не-WAV файлов установите FFmpeg или укажите app.audio.ffmpeg-path.", e);
+            throw new IllegalStateException("FFmpeg не найден или недоступен. Установите FFmpeg или укажите app.audio.ffmpeg-path.", e);
         } catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new IllegalStateException("Конвертация была прервана", e); }
     }
 

@@ -1,5 +1,6 @@
 package com.example.audiotext.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import com.example.audiotext.model.PostProcessingResult;
 import com.example.audiotext.model.WordInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -17,6 +18,9 @@ public class TextPostProcessingService {
     private final Set<String> fillers;
     private final Map<String, String> dictionary;
 
+    public TextPostProcessingService() { this(null); }
+
+    @Autowired
     public TextPostProcessingService(com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository) { this.userDictionaryRepository=userDictionaryRepository; this.fillers = loadFillers(); this.dictionary = loadDictionary(); }
 
     public PostProcessingResult process(String rawText, List<WordInfo> words) { return process(rawText, words, null); }
@@ -34,9 +38,11 @@ public class TextPostProcessingService {
 
         // 4-5) Безопасные замены терминов по границам слов.
         String text = String.join(" ", tokens);
-        for (var e : dictionary.entrySet()) {
+        Map<String, String> replacements = new LinkedHashMap<>(dictionary);
+        if (username != null && userDictionaryRepository != null) replacements.putAll(userDictionaryRepository.findEnabledReplacementsByUserLogin(username));
+        for (var e : replacements.entrySet()) {
             String before = text;
-            text = Pattern.compile("(?i)\\b" + Pattern.quote(e.getKey()) + "\\b").matcher(text).replaceAll(e.getValue());
+            text = Pattern.compile("(?i)\\b" + Pattern.quote(e.getKey()) + "\\b").matcher(text).replaceAll(e.getValue() == null ? "" : e.getValue());
             if (!before.equals(text)) r.getReplacements().put(e.getKey(), e.getValue());
         }
 
@@ -64,7 +70,7 @@ public class TextPostProcessingService {
 
     private List<String> removeFillers(List<String> tokens, PostProcessingResult r, String username) {
         java.util.Set<String> allFillers = new java.util.HashSet<>(fillers);
-        if (username != null) allFillers.addAll(userDictionaryRepository.findEnabledValuesByUserLogin(username).stream().map(v->v.toLowerCase(java.util.Locale.ROOT)).toList());
+        if (username != null && userDictionaryRepository != null) allFillers.addAll(userDictionaryRepository.findEnabledValuesByUserLogin(username).stream().map(v->v.toLowerCase(java.util.Locale.ROOT)).toList());
         List<String> out = new ArrayList<>();
         for (int i = 0; i < tokens.size(); i++) {
             String one = tokens.get(i).toLowerCase(Locale.ROOT);

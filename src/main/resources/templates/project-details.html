@@ -13,6 +13,9 @@
       <div>
         <h2 class="mb-1" th:text="${project.title}"></h2>
         <div class="text-muted-custom">Файл: <span th:text="${project.originalFileName}"></span></div>
+
+        <form class="d-flex gap-2 mt-2" method="post" th:action="@{/projects/{id}/rename(id=${project.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input class="form-control form-control-sm" name="title" th:value="${project.title}"><button class="btn btn-soft btn-sm">Переименовать</button></form>
+        <div th:if="${project.errorMessage}" class="alert alert-danger mt-2" th:text="${project.errorMessage}"></div>
         <div class="text-muted-custom">Режим распознавания: <span class="badge" th:classappend="${recognitionMode == 'VOSK' ? 'bg-navy' : 'conf-med'}" th:text="${recognitionMode}"></span></div>
       </div>
       <span id="statusBadge" class="badge rounded-pill bg-navy status-badge" th:text="${project.status.displayName}"></span>
@@ -20,7 +23,7 @@
     <div class="mt-3 d-flex flex-wrap gap-2">
       <form id="processForm" method="post" th:action="@{/projects/{id}/process(id=${project.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button id="processBtn" class="btn btn-pink pill-button"><span class="btn-text">Начать обработку</span><span class="spinner-border spinner-border-sm ms-2 d-none" id="processBtnSpinner"></span></button></form>
       <form method="post" th:action="@{/projects/{id}/text/reprocess(id=${project.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="btn btn-soft pill-button">Повторить</button></form>
-      <form method="post" th:action="@{/projects/{id}/text/ai-improve(id=${project.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="btn btn-soft pill-button">Запустить AI-постобработку</button></form>
+      <form method="post" th:action="@{/projects/{id}/text/ai-improve(id=${project.id})}"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="btn btn-soft pill-button">Запустить AI-постобработку</button></form><form method="post" th:action="@{/projects/{id}/delete(id=${project.id})}" onsubmit="return confirm('Удалить проект?')"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="btn btn-outline-danger pill-button">Удалить проект</button></form>
     </div>
   </div>
 

@@ -1,6 +1,7 @@
 package com.example.audiotext.controller;
 
-import com.example.audiotext.service.DictionaryService;
+import com.example.audiotext.repository.UserDictionaryRepository;
+import com.example.audiotext.service.CurrentUserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,34 +10,40 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class DictionaryController {
-    private final DictionaryService dictionaries;
+    private final UserDictionaryRepository dictionaries;
+    private final CurrentUserService currentUserService;
 
-    public DictionaryController(DictionaryService dictionaries) {
+    public DictionaryController(UserDictionaryRepository dictionaries, CurrentUserService currentUserService) {
         this.dictionaries = dictionaries;
+        this.currentUserService = currentUserService;
     }
 
     @GetMapping("/legacy-dictionaries")
     public String settings(Model model) {
-        String username = dictionaries.currentUsername();
-        model.addAttribute("username", username);
-        model.addAttribute("userDictionary", dictionaries.getUserDictionary(username));
-        model.addAttribute("systemDictionary", dictionaries.getSystemDictionary());
+        String username = currentUserService.username();
+        model.addAttribute("entries", dictionaries.findEntriesByUserLoginAndType(username, UserDictionaryRepository.FILLER_WORDS));
+        model.addAttribute("replacementEntries", dictionaries.findEntriesByUserLoginAndType(username, UserDictionaryRepository.REPLACEMENTS));
         return "settings";
     }
 
     @PostMapping("/settings/dictionary/save")
     public String save(@RequestParam String source, @RequestParam String replacement) {
-        String username = dictionaries.currentUsername();
+        String username = currentUserService.username();
         if (username != null && source != null && !source.isBlank() && replacement != null && !replacement.isBlank()) {
-            dictionaries.saveUserTerm(username.trim(), source.trim(), replacement.trim());
+            dictionaries.add(username, UserDictionaryRepository.REPLACEMENTS, source.trim(), replacement.trim());
         }
         return "redirect:/settings";
     }
 
     @PostMapping("/settings/dictionary/delete")
     public String delete(@RequestParam String source) {
-        String username = dictionaries.currentUsername();
-        if (username != null && source != null && !source.isBlank()) dictionaries.deleteUserTerm(username, source.trim());
+        String username = currentUserService.username();
+        if (username != null && source != null && !source.isBlank()) {
+            dictionaries.findEntriesByUserLoginAndType(username, UserDictionaryRepository.REPLACEMENTS).stream()
+                    .filter(e -> source.trim().equalsIgnoreCase(e.sourceValue()))
+                    .findFirst()
+                    .ifPresent(e -> dictionaries.delete(username, e.id()));
+        }
         return "redirect:/settings";
     }
 }

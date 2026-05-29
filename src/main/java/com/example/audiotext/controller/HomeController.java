@@ -1,6 +1,7 @@
 package com.example.audiotext.controller;
 
 import com.example.audiotext.repository.ProjectRepository;
+import com.example.audiotext.service.CurrentUserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,22 +11,24 @@ import java.util.List;
 @Controller
 public class HomeController {
     private final ProjectRepository repo;
+    private final CurrentUserService currentUserService;
 
-    public HomeController(ProjectRepository repo) {
+    public HomeController(ProjectRepository repo, CurrentUserService currentUserService) {
         this.repo = repo;
+        this.currentUserService = currentUserService;
     }
 
     public record FaqItem(String question, String answer) {}
 
     @GetMapping("/")
     public String index(Model model) {
-        model.addAttribute("recentProjects", repo.findAll().stream().limit(3).toList());
+        model.addAttribute("recentProjects", List.of());
         return "index";
     }
 
     @GetMapping("/workspace")
     public String workspace(Model model) {
-        model.addAttribute("recentProjects", repo.findAll().stream().limit(5).toList());
+        model.addAttribute("recentProjects", repo.findRecentByOwner(currentUserService.username(), 5));
         return "workspace";
     }
 

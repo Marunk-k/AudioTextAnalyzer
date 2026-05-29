@@ -16,5 +16,4 @@ public class SettingsController {
     @PostMapping("/settings/replacements") public String addReplacement(@RequestParam String sourceValue, @RequestParam String targetValue, RedirectAttributes ra){ if(sourceValue==null||sourceValue.isBlank()||targetValue==null||targetValue.isBlank()) ra.addFlashAttribute("warning","Для замены заполните исходное и целевое значение."); else repo.add(currentUserService.username(), UserDictionaryRepository.REPLACEMENTS, sourceValue, targetValue); return "redirect:/settings"; }
     @PostMapping("/settings/dictionary/{id}/delete") public String deleteAny(@PathVariable Long id){ repo.delete(currentUserService.username(), id); return "redirect:/settings"; }
     @PostMapping("/settings/fillers/{id}/delete") public String delete(@PathVariable Long id){ return deleteAny(id); }
-    @PostMapping("/settings/fillers/{id}/toggle") public String toggle(@PathVariable Long id,@RequestParam boolean enabled){ repo.toggle(currentUserService.username(), id, enabled); return "redirect:/settings"; }
 }

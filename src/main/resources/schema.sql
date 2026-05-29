@@ -72,3 +72,5 @@ create table if not exists export_files (
   created_at timestamp not null,
   unique(project_id, format)
 );
+
+alter table projects add column if not exists original_file_path varchar(1000);

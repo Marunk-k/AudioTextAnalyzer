@@ -10,6 +10,7 @@ public interface ProjectRepository {
     Optional<Project> findByIdAndOwner(Long id, String login);
     List<Project> findAll();
     List<Project> findAllByOwner(String login);
+    List<Project> findRecentByOwner(String login, int limit);
     boolean existsByOwnerAndTitle(String login, String title);
     boolean existsByOwnerAndTitleExcludingProject(String login, String title, Long projectId);
     void update(Project p);

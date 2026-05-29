@@ -67,14 +67,21 @@ public class UploadController {
         }
 
         try {
+            String username = currentUserService.username();
+            if (repo.existsByOwnerAndTitle(username, title.trim())) {
+                model.addAttribute("error", "Проект с таким названием уже существует.");
+                return uploadPage(model);
+            }
+            byte[] fileData = file.getBytes();
             var path = storage.storeUploadedFile(file, title);
             Project p = new Project();
             p.setTitle(title.trim());
             p.setOriginalFileName(originalName);
             p.setOriginalFilePath(path.toString());
             p.setStatus(ProjectStatus.UPLOADED);
-            p.setUserId(userRepository.findIdByLogin(currentUserService.username()));
+            p.setUserId(userRepository.findIdByLogin(username));
             p = repo.save(p);
+            repo.saveAudioFile(p.getId(), originalName, file.getContentType(), fileData);
             return "redirect:/projects/" + p.getId();
         } catch (Exception ex) {
             log.error("Upload failed for file '{}'", originalName, ex);

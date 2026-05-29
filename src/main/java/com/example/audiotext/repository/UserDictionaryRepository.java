@@ -35,6 +35,7 @@ public class UserDictionaryRepository {
         jdbc.update("insert into dictionary_entries(dictionary_id,source_value,target_value,enabled,created_at) values(?,?,?,?,?)", dictId, sourceValue.trim().toLowerCase(), targetValue == null ? null : targetValue.trim(), true, LocalDateTime.now());
     }
     public void delete(String login, Long id){ jdbc.update("delete from dictionary_entries where id in (select de.id from dictionary_entries de join dictionaries d on d.id=de.dictionary_id join users u on u.id=d.user_id where de.id=? and u.login=?)", id, login); }
+    public void toggle(String login, Long id, boolean enabled){ jdbc.update("update dictionary_entries set enabled=? where id in (select de.id from dictionary_entries de join dictionaries d on d.id=de.dictionary_id join users u on u.id=d.user_id where de.id=? and u.login=?)", enabled, id, login); }
     private Long ensureDict(String login, String type){
         var ids = jdbc.queryForList("select d.id from dictionaries d join users u on u.id=d.user_id where u.login=? and d.type=? limit 1", Long.class, login, type);
         if(!ids.isEmpty()) return ids.get(0);

@@ -17,14 +17,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class VoskTranscriptionService {
+public class VoskTranscriptionService implements TranscriptionService {
     private final AppProperties props;
     private final ObjectMapper mapper = new ObjectMapper();
 
     public VoskTranscriptionService(AppProperties props) { this.props = props; }
 
+    @Override
     public TranscriptionResult transcribe(Path wavFile) {
-        Path modelPath = Path.of(props.getVosk().getModelPath());
+        String configuredModelPath = props.getVosk().getModelPath();
+        if (configuredModelPath == null || configuredModelPath.isBlank()) {
+            throw new IllegalStateException("Путь к модели Vosk не задан. Укажите app.vosk.model-path.");
+        }
+        Path modelPath = Path.of(configuredModelPath);
         if (!Files.exists(modelPath)) {
             throw new IllegalStateException("Модель Vosk не найдена: " + modelPath.toAbsolutePath());
         }

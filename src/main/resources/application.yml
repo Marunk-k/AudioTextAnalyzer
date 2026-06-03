@@ -36,5 +36,5 @@ app:
     verify-ssl-certs: false
     timeout-seconds: 60
   processing:
-    use-mock-transcription-if-vosk-unavailable: true
+    use-mock-transcription-if-vosk-unavailable: false
     low-confidence-threshold: 0.6

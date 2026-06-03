@@ -25,7 +25,8 @@ public class SmartTranscriptionService implements TranscriptionService {
     public String currentMode() {
         String mp = props.getVosk().getModelPath();
         boolean modelExists = mp != null && !mp.isBlank() && Files.exists(Path.of(mp));
-        return (props.getVosk().isEnabled() && modelExists) ? "VOSK" : "MOCK";
+        if (props.getVosk().isEnabled() && modelExists) return "VOSK";
+        return props.getProcessing().isUseMockTranscriptionIfVoskUnavailable() ? "MOCK (dev)" : "VOSK недоступен";
     }
 
     @Override

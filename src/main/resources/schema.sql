@@ -74,3 +74,4 @@ create table if not exists export_files (
 );
 
 alter table projects add column if not exists original_file_path varchar(1000);
+alter table analysis_results add column if not exists source_text_type varchar(30);

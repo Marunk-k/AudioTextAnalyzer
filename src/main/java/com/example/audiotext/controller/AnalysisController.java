@@ -21,8 +21,8 @@ public class AnalysisController {
 
     @PostMapping("/projects/{id}/text/ai-improve")
     public String aiImprove(@PathVariable Long id, RedirectAttributes redirectAttributes){
-        String username = username();
-        var p = username == null ? repo.findById(id).orElseThrow() : repo.findByIdAndOwner(id, username).orElseThrow();
+        String username = currentUserService.username();
+        var p = repo.findByIdAndOwner(id, username).orElseThrow();
         String base = TextVersionSelector.hasText(p.getProcessedText()) ? p.getProcessedText() : p.getRawText();
         if(base==null || base.isBlank()){
             redirectAttributes.addFlashAttribute("warning", "Нет текста для AI-постобработки.");
@@ -33,8 +33,9 @@ public class AnalysisController {
             p.setAiText(aiText);
             var analysisContext = new TranscriptionResult();
             analysisContext.setDurationSeconds(p.getDurationSeconds() != null ? p.getDurationSeconds() : 0);
-            var analysisResult = username == null ? analysis.analyze(TextVersionSelector.bestTextForAnalysis(p), analysisContext) : analysis.analyze(TextVersionSelector.bestTextForAnalysis(p), analysisContext, username, p.getRawText());
-            analysisResult.algorithmicSummary = ai.summarizeText(aiText);
+            var selected = TextVersionSelector.selectedText(p);
+            var analysisResult = analysis.analyze(selected.text(), analysisContext, username, p.getRawText());
+            analysisResult.sourceTextType = selected.type().name();
             p.setAnalysisResult(analysisResult);
             repo.update(p);
             repo.updateAnalysis(id, analysisResult);
@@ -44,5 +45,4 @@ public class AnalysisController {
         }
         return "redirect:/projects/"+id;
     }
-    private String username(){ return currentUserService == null ? null : currentUserService.username(); }
 }

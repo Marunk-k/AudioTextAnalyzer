@@ -16,7 +16,7 @@ public class GigaChatConfig {
             log.info("AI-постобработка: используется RealGigaChatService");
             return new RealGigaChatService(giga);
         }
-        log.info("AI-постобработка: используется fallback-сервис, real credentials не заданы или отключены");
-        return new MockGigaChatService();
+        log.info("AI-постобработка недоступна: GigaChat отключён или credentials не заданы");
+        return new UnavailableGigaChatService();
     }
 }

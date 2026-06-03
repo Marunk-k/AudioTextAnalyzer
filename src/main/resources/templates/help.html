@@ -12,9 +12,10 @@
   <div class="soft-card p-4 mb-4">
     <h2 class="mb-3">Справка</h2>
     <p class="text-muted-custom mb-0">
-      AudioText Analyzer помогает загрузить аудиофайл, распознать речь через Vosk, выполнить алгоритмическую
+      AudioText Analyzer помогает через браузер загрузить аудиофайл, распознать речь через Vosk, выполнить алгоритмическую
       предобработку, при необходимости запустить AI-постобработку GigaChat, проанализировать текст и экспортировать
-      результат в TXT, DOCX, PDF или JSON.
+      результат в TXT, DOCX, PDF или JSON. Загруженные аудиофайлы и экспортированные документы сохраняются в базе данных;
+      временные файлы создаются на сервере только на этапе обработки и экспорта.
     </p>
   </div>
 
@@ -22,7 +23,7 @@
     <div class="col-md-3"><div class="feature-card p-3 h-100"><h5>1. Проект</h5><p class="mb-0">Создайте проект с уникальным названием и загрузите WAV, MP3, M4A, OGG или FLAC.</p></div></div>
     <div class="col-md-3"><div class="feature-card p-3 h-100"><h5>2. Обработка</h5><p class="mb-0">FFmpeg временно приводит аудио к WAV mono 16000 Hz, затем Vosk выполняет распознавание.</p></div></div>
     <div class="col-md-3"><div class="feature-card p-3 h-100"><h5>3. Текст</h5><p class="mb-0">Система хранит raw, processed, AI и manual версии. Приоритет: manual → AI → processed → raw.</p></div></div>
-    <div class="col-md-3"><div class="feature-card p-3 h-100"><h5>4. Экспорт</h5><p class="mb-0">Экспорт включает название проекта, исходный файл, выбранный текст и анализ, если он уже выполнен.</p></div></div>
+    <div class="col-md-3"><div class="feature-card p-3 h-100"><h5>4. Экспорт</h5><p class="mb-0">Экспорт сохраняется в базе данных и включает название проекта, исходный файл, выбранный текст и анализ, если он уже выполнен.</p></div></div>
   </div>
 
   <div class="soft-card p-4">

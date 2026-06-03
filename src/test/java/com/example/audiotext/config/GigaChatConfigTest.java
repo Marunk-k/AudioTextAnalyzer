@@ -1,7 +1,7 @@
 package com.example.audiotext.config;
 
 import com.example.audiotext.service.GigaChatService;
-import com.example.audiotext.service.MockGigaChatService;
+import com.example.audiotext.service.UnavailableGigaChatService;
 import com.example.audiotext.service.RealGigaChatService;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,7 +12,7 @@ class GigaChatConfigTest {
         AppProperties props=new AppProperties();
         props.getGigachat().setEnabled(false);
         GigaChatService service=new GigaChatConfig().gigaChatService(props);
-        assertInstanceOf(MockGigaChatService.class, service);
+        assertInstanceOf(UnavailableGigaChatService.class, service);
     }
 
     @Test

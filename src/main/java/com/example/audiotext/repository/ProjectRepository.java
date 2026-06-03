@@ -19,9 +19,11 @@ public interface ProjectRepository {
     void saveSegments(Long projectId, List<TranscriptionSegment> segments);
     List<TranscriptionSegment> findSegmentsByProjectId(Long projectId);
     void saveAudioFile(Long projectId, String fileName, String contentType, byte[] fileData);
+    Optional<AudioFile> findOriginalAudioFile(Long projectId);
     void upsertExportFile(Long projectId, ExportFormat format, String fileName, String contentType, byte[] fileData);
     Optional<ExportedFile> findExportFile(Long projectId, ExportFormat format);
     void deleteById(Long id);
 
+    record AudioFile(String fileName, String contentType, byte[] fileData) {}
     record ExportedFile(String fileName, String contentType, byte[] fileData) {}
 }

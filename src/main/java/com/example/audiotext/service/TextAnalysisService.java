@@ -17,11 +17,12 @@ public class TextAnalysisService {
     private final Set<String> stopWords = loadWords("config/stop_words_ru.txt", Set.of("и", "в", "на", "что"));
     private final Set<String> fillerWords = loadWords("config/filler_words_ru.txt", Set.of("ну", "эээ", "как бы"));
     private final double lowConfidenceThreshold;
+    private final GigaChatService gigaChatService;
 
     public TextAnalysisService() { this(null); }
-    public TextAnalysisService(com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository) { this.userDictionaryRepository=userDictionaryRepository; this.lowConfidenceThreshold = 0.6; }
+    public TextAnalysisService(com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository) { this.userDictionaryRepository=userDictionaryRepository; this.lowConfidenceThreshold = 0.6; this.gigaChatService = null; }
     @Autowired
-    public TextAnalysisService(AppProperties properties, com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository) { this.userDictionaryRepository=userDictionaryRepository; this.lowConfidenceThreshold = properties.getProcessing().getLowConfidenceThreshold(); }
+    public TextAnalysisService(AppProperties properties, com.example.audiotext.repository.UserDictionaryRepository userDictionaryRepository, GigaChatService gigaChatService) { this.userDictionaryRepository=userDictionaryRepository; this.lowConfidenceThreshold = properties.getProcessing().getLowConfidenceThreshold(); this.gigaChatService = gigaChatService; }
 
     public TextAnalysisResult analyze(String text, TranscriptionResult tr) { return analyze(text,tr,null,null); }
     public TextAnalysisResult analyze(String text, TranscriptionResult tr, String username) { return analyze(text,tr,username,null); }
@@ -66,8 +67,21 @@ public class TextAnalysisService {
         }
         r.keywordFrequency = sortTop(keywords, 15);
         r.fillerWordFrequency = sortTop(fillers, 15);
-        r.algorithmicSummary = summarize(safeText);
+        r.algorithmicSummary = buildSummary(safeText);
         return r;
+    }
+
+    private String buildSummary(String text) {
+        String fallback = summarize(text);
+        if (gigaChatService == null || !gigaChatService.isAvailable()) {
+            return fallback;
+        }
+        try {
+            String summary = gigaChatService.summarizeText(text);
+            return summary == null || summary.isBlank() ? fallback : summary.trim();
+        } catch (Exception ex) {
+            return fallback;
+        }
     }
 
     // Алгоритмическое резюме: частоты значимых слов + scoring предложений.

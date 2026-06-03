@@ -73,11 +73,10 @@ public class UploadController {
                 return uploadPage(model);
             }
             byte[] fileData = file.getBytes();
-            var path = storage.storeUploadedFile(file, title);
             Project p = new Project();
             p.setTitle(title.trim());
             p.setOriginalFileName(originalName);
-            p.setOriginalFilePath(path.toString());
+            p.setOriginalFilePath(originalName);
             p.setStatus(ProjectStatus.UPLOADED);
             p.setUserId(userRepository.findIdByLogin(username));
             p = repo.save(p);

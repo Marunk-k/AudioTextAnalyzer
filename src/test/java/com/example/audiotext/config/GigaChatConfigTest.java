@@ -20,7 +20,9 @@ class GigaChatConfigTest {
         AppProperties props=new AppProperties();
         props.getGigachat().setEnabled(true);
         props.getGigachat().setCredentials(" ");
-        assertDoesNotThrow(() -> new GigaChatConfig().gigaChatService(props));
+        GigaChatService service = assertDoesNotThrow(() -> new GigaChatConfig().gigaChatService(props));
+        assertInstanceOf(UnavailableGigaChatService.class, service);
+        assertFalse(service.isAvailable());
     }
 
     @Test

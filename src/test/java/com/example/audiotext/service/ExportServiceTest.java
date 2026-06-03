@@ -34,6 +34,6 @@ class ExportServiceTest {
         service.exportToTxt(p);
 
         String exported = Files.readString(out);
-        assertTrue(exported.contains("Главный текст:\nAI финальный текст"));
+        assertTrue(exported.contains("Итоговый текст:\nAI финальный текст"));
     }
 }

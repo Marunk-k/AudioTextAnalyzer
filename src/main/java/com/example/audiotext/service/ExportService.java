@@ -61,12 +61,12 @@ public class ExportService {
         try{ Path out=storage.getExportPath(p.getId(), ExportFormat.PDF);
             try(PDDocument doc=new PDDocument()){
                 PDFont font = loadPdfFont(doc);
-                PdfWriter writer = new PdfWriter(doc, font);
-                for (String paragraph : exportText(p).replace("\r", "").split("\n", -1)) {
-                    if (paragraph.isBlank()) writer.blankLine();
-                    else for (String line : wrap(paragraph, font, PDF_FONT_SIZE, writer.contentWidth())) writer.writeLine(line);
+                try (PdfWriter writer = new PdfWriter(doc, font)) {
+                    for (String paragraph : exportText(p).replace("\r", "").split("\n", -1)) {
+                        if (paragraph.isBlank()) writer.blankLine();
+                        else for (String line : wrap(paragraph, font, PDF_FONT_SIZE, writer.contentWidth())) writer.writeLine(line);
+                    }
                 }
-                writer.close();
                 doc.save(out.toFile());
             }
             return out;

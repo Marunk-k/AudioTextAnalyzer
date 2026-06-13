@@ -4,6 +4,11 @@ import com.example.audiotext.config.AppProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -17,6 +22,17 @@ import static org.mockito.Mockito.when;
 class FfmpegAudioServiceTest {
     @TempDir
     Path tempDir;
+
+    @Test
+    void processesCompatibleWavWithoutFfmpeg() throws Exception {
+        Path wav = createCompatibleWav("ready.wav", 1);
+        StorageService storage = mock(StorageService.class);
+        AppProperties properties = properties(tempDir.resolve("missing ffmpeg").toString());
+        FfmpegAudioService service = new FfmpegAudioService(properties, storage);
+
+        assertEquals(wav, service.convertToWav(wav, 1L));
+        assertEquals(1.0, service.getDurationSeconds(wav), 0.01);
+    }
 
     @Test
     void usesConfiguredExecutableAsSingleProcessBuilderArgument() throws Exception {
@@ -86,5 +102,16 @@ class FfmpegAudioServiceTest {
         properties.getAudio().setFfmpegPath(ffmpegPath);
         properties.getAudio().setAllowedExtensions(List.of("wav", "mp3"));
         return properties;
+    }
+
+    private Path createCompatibleWav(String name, int durationSeconds) throws Exception {
+        AudioFormat format = new AudioFormat(16_000, 16, 1, true, false);
+        byte[] pcm = new byte[16_000 * format.getFrameSize() * durationSeconds];
+        Path wav = tempDir.resolve(name);
+        try (AudioInputStream stream = new AudioInputStream(
+                new ByteArrayInputStream(pcm), format, pcm.length / format.getFrameSize())) {
+            AudioSystem.write(stream, AudioFileFormat.Type.WAVE, wav.toFile());
+        }
+        return wav;
     }
 }

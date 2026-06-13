@@ -5,6 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -27,6 +30,11 @@ public class FfmpegAudioService implements AudioService {
 
     @Override
     public Path convertToWav(Path inputFile, Long projectId) {
+        if (isVoskReadyWav(inputFile)) {
+            log.info("WAV {} already has PCM mono 16 kHz format; FFmpeg conversion is not required", inputFile);
+            return inputFile;
+        }
+
         Path out = storage.getConvertedPath(projectId);
         try { Files.createDirectories(out.getParent()); } catch (IOException e) { throw new IllegalStateException("Не удалось подготовить временный каталог для WAV", e); }
         String ffmpeg = configuredFfmpegPath();
@@ -52,7 +60,34 @@ public class FfmpegAudioService implements AudioService {
             String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
             if (p.waitFor() == 0 && !out.isBlank()) return Double.parseDouble(out);
         } catch (Exception e) { log.warn("ffprobe недоступен: {}", e.getMessage()); }
-        return 0;
+        return wavDurationSeconds(file);
+    }
+
+    private boolean isVoskReadyWav(Path file) {
+        if (!file.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".wav")) return false;
+        try (AudioInputStream stream = AudioSystem.getAudioInputStream(file.toFile())) {
+            AudioFormat format = stream.getFormat();
+            return AudioFormat.Encoding.PCM_SIGNED.equals(format.getEncoding())
+                    && format.getChannels() == 1
+                    && format.getSampleSizeInBits() == 16
+                    && Math.abs(format.getSampleRate() - 16_000f) < 0.01f
+                    && !format.isBigEndian();
+        } catch (Exception e) {
+            log.warn("Не удалось проверить формат WAV {}: {}", file, e.getMessage());
+            return false;
+        }
+    }
+
+    private double wavDurationSeconds(Path file) {
+        if (!file.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".wav")) return 0;
+        try (AudioInputStream stream = AudioSystem.getAudioInputStream(file.toFile())) {
+            AudioFormat format = stream.getFormat();
+            if (stream.getFrameLength() <= 0 || format.getFrameRate() <= 0) return 0;
+            return stream.getFrameLength() / format.getFrameRate();
+        } catch (Exception e) {
+            log.warn("Не удалось определить длительность WAV {}: {}", file, e.getMessage());
+            return 0;
+        }
     }
 
     private void verifyFfmpegAvailable(String ffmpeg) {

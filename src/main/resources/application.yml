@@ -22,7 +22,10 @@ app:
     converted-dir: data/converted
     export-dir: data/exports
   audio:
+    # Windows example: C:/ffmpeg/bin/ffmpeg.exe
     ffmpeg-path: ffmpeg
+    # Optional. If omitted, ffprobe is searched next to ffmpeg.exe or in PATH.
+    ffprobe-path:
     allowed-extensions: [wav, mp3, m4a, ogg, flac]
   vosk:
     enabled: true

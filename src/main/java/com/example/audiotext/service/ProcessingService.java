@@ -62,12 +62,23 @@ public class ProcessingService {
         } catch (Exception e) {
             log.error("Processing failed for project {}", id, e);
             p.setStatus(ProjectStatus.ERROR);
-            p.setErrorMessage(e.getMessage());
+            p.setErrorMessage(userMessage(e));
             repo.update(p);
         } finally {
             deleteTemp(wav, id, "WAV");
             deleteTemp(source, id, "исходный файл");
         }
+    }
+
+    private String userMessage(Exception error) {
+        Throwable current = error;
+        while (current != null) {
+            if (current.getMessage() != null && !current.getMessage().isBlank()) {
+                return current.getMessage();
+            }
+            current = current.getCause();
+        }
+        return "Не удалось обработать аудиофайл. Проверьте настройки FFmpeg и модели Vosk.";
     }
 
     private TextAnalysisResult analyzeProject(com.example.audiotext.model.Project p, TranscriptionResult t, String username) {
